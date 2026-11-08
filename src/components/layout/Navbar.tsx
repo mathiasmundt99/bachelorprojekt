@@ -13,7 +13,7 @@ function Navbar() {
           Home
         </NavLink>
 
-        <NavLink to="/inventory">Thread stash</NavLink>
+        <NavLink to="/InventoryPage">Thread stash</NavLink>
 
         <NavLink to="/style-guide">Style guide</NavLink>
       </nav>
