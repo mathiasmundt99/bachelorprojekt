@@ -1,0 +1,458 @@
+
+/* =========================
+   GLOBAL
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f8f5f9;
+  color: #171717;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+  height: 88px;
+  padding: 0 28px;
+  background: #fffdf9;
+  border-bottom: 1px solid #171717;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #171717;
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  background: #f8d967;
+  border: 1px solid #171717;
+  box-shadow: 3px 3px #171717;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+}
+
+.navbar nav {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  height: 100%;
+}
+
+.navbar nav a {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  text-decoration: none;
+  color: #171717;
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+
+.navbar nav a.active {
+  border-bottom-color: #171717;
+}
+
+/* =========================
+   HOME CONTAINER
+========================= */
+
+.home-container {
+  max-width: 1170px;
+  margin: 0 auto;
+  padding: 40px 0 60px;
+}
+
+/* =========================
+   PAGE HEADER
+========================= */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  display: block;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.page-header h1 {
+  margin: 10px 0 0;
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+
+.search-input {
+  width: 290px;
+  height: 39px;
+  padding: 0 14px;
+  border: 1px solid #171717;
+  box-shadow: 3px 3px #171717;
+  background: #fffdf9;
+  font-size: 12px;
+  outline: none;
+}
+
+.search-input:focus {
+  outline: 2px solid #6c52be;
+  outline-offset: 2px;
+}
+
+/* =========================
+   PROJECT GRID
+========================= */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+/* =========================
+   CREATE PROJECT CARD
+========================= */
+
+.create-project-card {
+  min-height: 268px;
+  background: #fffdf9;
+  border: 1px dashed #171717;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.create-project-card:hover {
+  background: #f0eaf2;
+}
+
+.create-icon {
+  width: 50px;
+  height: 50px;
+  background: #d3ef69;
+  border: 1px solid #171717;
+  box-shadow: 3px 3px #171717;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  margin-bottom: 18px;
+}
+
+.create-project-card h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.create-project-card p {
+  margin: 0;
+  color: #8a789c;
+  font-size: 12px;
+}
+
+/* =========================
+   PROJECT CARD
+========================= */
+
+.project-card {
+  min-width: 0;
+  background: #fffdf9;
+  border: 1px solid #171717;
+  box-shadow: 4px 4px #171717;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-preview {
+  height: 198px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid #171717;
+  padding: 18px;
+}
+
+.canvas-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
+
+  background-image:
+    linear-gradient(rgba(23, 23, 23, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 23, 23, 0.12) 1px, transparent 1px);
+
+  background-size: 10px 10px;
+  border: 1px solid rgba(23, 23, 23, 0.3);
+}
+
+.stitch-symbol {
+  font-size: 58px;
+  color: #6c52be;
+}
+
+.project-card:nth-child(3) .stitch-symbol {
+  color: #27b9a9;
+}
+
+.project-card:nth-child(4) .stitch-symbol {
+  color: #eb649f;
+}
+
+.progress-label {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: #fffdf9;
+  border: 1px solid #171717;
+  padding: 4px 7px;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+.project-info {
+  min-height: 68px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.project-info h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.project-info p {
+  margin: 0;
+  color: #8a789c;
+  font-size: 11px;
+}
+
+.more-button {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #fffdf9;
+  border: 1px solid #171717;
+  font-size: 18px;
+}
+
+.more-button:hover {
+  background: #f8d967;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 32px;
+}
+
+.dashboard-stats {
+  display: contents;
+}
+
+.stat-card,
+.reminder-card {
+  min-height: 180px;
+  padding: 24px 20px;
+  border: 1px solid #171717;
+  box-shadow: 4px 4px #171717;
+}
+
+.stitches-card {
+  background: #e45f9d;
+}
+
+.stash-card {
+  background: #5dc3b2;
+}
+
+.stat-card h2 {
+  margin: 20px 0 4px;
+  font-size: 40px;
+  letter-spacing: -2px;
+}
+
+.stat-card p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.stat-progress {
+  height: 9px;
+  margin-top: 16px;
+  background: #fffdf9;
+  border: 1px solid #171717;
+}
+
+.stat-progress div {
+  width: 75%;
+  height: 100%;
+  background: #6c52be;
+}
+
+.stash-card a {
+  display: inline-block;
+  margin-top: 20px;
+  color: #171717;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.stash-card a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   REMINDER
+========================= */
+
+.reminder-card {
+  position: relative;
+  overflow: hidden;
+  background: #171717;
+  color: white;
+}
+
+.reminder-card h2 {
+  margin: 26px 0 0;
+  max-width: 350px;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+.reminder-decoration {
+  position: absolute;
+  bottom: 12px;
+  right: 10px;
+  color: #f8d967;
+  font-size: 23px;
+  transform: rotate(-10deg);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1200px) {
+  .home-container {
+    margin: 0 30px;
+  }
+}
+
+@media (max-width: 900px) {
+  .projects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reminder-card {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    height: 70px;
+    padding: 0 16px;
+  }
+
+  .navbar nav {
+    gap: 10px;
+  }
+
+  .navbar nav a {
+    font-size: 10px;
+    padding: 0 4px;
+  }
+
+  .home-container {
+    margin: 0 18px;
+    padding-top: 28px;
+  }
+
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .projects-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reminder-card {
+    grid-column: auto;
+  }
+}
+
+.project-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 6px 8px #171717;
+}
+
+.create-icon {
+  display: grid;
+  place-items: center;
+}
+
+.create-icon .material-symbols-sharp {
+  font-size: 32px;
+}
