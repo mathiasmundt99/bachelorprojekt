@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Pattern } from "../../types/pattern";
 import dmcColors from "../../data/dmc-colors.json";
+import AddColorsModal from "../modals/AddColorsModal";
 
 type ColorPaletteProps = {
   selectedColor: string;
@@ -36,6 +37,7 @@ function ColorPalette({
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("number");
   const [palette, setPalette] = useState("garden");
+  const [isAddColorsOpen, setIsAddColorsOpen] = useState(false);
   const activeColors = dmcColors.filter((color) => {
     if (palette === "basic") {
       return basicColorCodes.includes(color.code);
@@ -133,10 +135,19 @@ function ColorPalette({
           <button
             type="button"
             className="add-color-button"
-            disabled
+            onClick={() => setIsAddColorsOpen(true)}
             title="Add colors coming later">
             +
           </button>
+        )}
+        {isAddColorsOpen && (
+          <AddColorsModal
+            paletteName={
+              palette === "garden" ? "Garden favorites" : "Basic colors"
+            }
+            existingColorCodes={activeColors.map((color) => color.code)}
+            onClose={() => setIsAddColorsOpen(false)}
+          />
         )}
       </div>
     </div>
