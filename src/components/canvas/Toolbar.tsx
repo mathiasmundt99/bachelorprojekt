@@ -9,7 +9,7 @@ const tools: { id: Tool; label: string; icon: string }[] = [
   { id: "pencil", label: "Brush", icon: "✎" },
   { id: "eraser", label: "Eraser", icon: "◇" },
   { id: "fill", label: "Fill", icon: "◈" },
-  { id: "picker", label: "Pick color", icon: "◩" },
+  { id: "eyedropper", label: "Pick color", icon: "◩" },
   { id: "move", label: "Move", icon: "✥" },
   { id: "swap", label: "Swap colors", icon: "✥" },
 ];

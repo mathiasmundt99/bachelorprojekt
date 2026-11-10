@@ -1,4 +1,10 @@
-export type Tool = "pencil" | "eraser" | "fill" | "picker" | "move" | "swap";
+export type Tool =
+  | "pencil"
+  | "eraser"
+  | "fill"
+  | "eyedropper"
+  | "move"
+  | "swap";
 
 export type Pattern = {
   width: number;

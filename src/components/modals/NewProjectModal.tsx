@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CreatePaletteModal from "./CreatePaletteModal";
 import dmcColors from "../../data/dmc-colors.json";
 import type { CustomPalette } from "../../types/palette";
@@ -37,6 +38,7 @@ const paletteOptions = [
 ];
 
 function NewProjectModal({ onClose }: NewProjectModalProps) {
+  const navigate = useNavigate();
   // PATTERN SIZE
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(80);
@@ -68,7 +70,17 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
     // Gå tilbage til Pattern setup
     setIsCreatingPalette(false);
   };
-
+  const handleCreatePattern = () => {
+    navigate("/canvas", {
+      state: {
+        width,
+        height,
+        fabricCount,
+        fabricColor,
+        selectedPalette,
+      },
+    });
+  };
   // KOMBINÉR EKSEMPELPALetter OG NYE PALETTER
   const allPaletteOptions = [
     ...paletteOptions,
@@ -314,7 +326,10 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             CANCEL
           </button>
 
-          <button type="button" className="new-project-create" disabled>
+          <button
+            type="button"
+            className="new-project-create"
+            onClick={handleCreatePattern}>
             CREATE PATTERN →
           </button>
         </footer>
