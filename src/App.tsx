@@ -9,17 +9,28 @@ import FinishedPage from "./pages/FinishedPage";
 
 function App() {
   useEffect(() => {
-    async function testConnection() {
-      const { error } = await supabase.from("dmc_colors").select("*").limit(1);
+    const testDMCInsert = async () => {
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: "test1@example.com",
+        password: "Test1234!",
+      });
 
-      if (error) {
-        console.error("Supabase fejl:", error.message);
-      } else {
-        console.log("Supabase forbindelse virker!");
+      if (loginError) {
+        console.error("Login-fejl:", loginError.message);
+        return;
       }
-    }
 
-    testConnection();
+      const { data, error } = await supabase
+        .from("palette_colors")
+        .update({ palette_id: 2 })
+        .eq("palette_id", 1)
+        .eq("dmc_code", "3713")
+        .select();
+
+      console.log("UPDATE palette_colors:", { data, error });
+    };
+
+    testDMCInsert();
   }, []);
 
   return (
