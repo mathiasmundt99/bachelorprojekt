@@ -1,6 +1,10 @@
-function CreateProjectCard() {
+type CreateProjectCardProps = {
+  onClick: () => void;
+};
+
+function CreateProjectCard({ onClick }: CreateProjectCardProps) {
   return (
-    <button className="create-project-card">
+    <button type="button" className="create-project-card" onClick={onClick}>
       <div className="create-icon">
         <span className="material-symbols-sharp">add</span>
       </div>

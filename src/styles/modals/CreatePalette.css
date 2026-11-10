@@ -1,0 +1,281 @@
+/* ========================================
+   CREATE PALETTE MODAL
+======================================== */
+
+/* HEADER */
+
+.create-palette-back {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #202020;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.create-palette-back:hover {
+  opacity: 0.7;
+}
+
+/* ========================================
+   PALETTE NAME
+======================================== */
+
+.create-palette-name-field {
+  margin-bottom: 36px;
+}
+
+.create-palette-name-field label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.create-palette-name-input {
+  display: flex;
+  align-items: center;
+  border: 2px solid #202020;
+  background: #fff;
+  box-shadow: 4px 4px 0 #202020;
+}
+
+.create-palette-name-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #202020;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.create-palette-name-input input::placeholder {
+  color: #999;
+}
+
+.create-palette-name-input > span {
+  flex-shrink: 0;
+  padding: 0 16px;
+  color: #888;
+  font-size: 12px;
+}
+
+/* ========================================
+   HEADING AND SEARCH
+======================================== */
+
+.create-palette-colors-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.create-palette-colors-heading h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.create-palette-colors-heading p {
+  margin: 0;
+  color: #888;
+  font-size: 13px;
+}
+
+.create-palette-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 280px;
+  padding: 12px;
+  border: 2px solid #202020;
+  background: #fff;
+  box-shadow: 4px 4px 0 #202020;
+}
+
+.create-palette-search .material-symbols-sharp {
+  flex-shrink: 0;
+  color: #888;
+  font-size: 21px;
+}
+
+.create-palette-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #202020;
+  font-size: 13px;
+}
+
+.create-palette-search input::placeholder {
+  color: #999;
+}
+
+/* ========================================
+   DMC COLOR GRID
+======================================== */
+
+.create-palette-color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.create-palette-color-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 2px solid #202020;
+  background: #fffafa;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #202020;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.create-palette-color-card:hover {
+  background: #f0eaf2;
+}
+
+.create-palette-color-card.selected,
+.create-palette-color-card.selected:hover {
+  background: #d7f46a;
+}
+
+.create-palette-color-swatch {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border: 2px solid #202020;
+}
+
+.create-palette-color-swatch .material-symbols-sharp {
+  color: #fff;
+  font-size: 25px;
+  text-shadow: 1px 1px 2px #202020;
+}
+
+.create-palette-color-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.create-palette-color-info strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.create-palette-color-info > span {
+  overflow: hidden;
+  color: #888;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.create-palette-color-card.selected .create-palette-color-info > span {
+  color: #444;
+}
+
+.create-palette-color-action {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #202020;
+  background: #fff;
+}
+
+.create-palette-color-card.selected .create-palette-color-action {
+  background: #ffca45;
+}
+
+.create-palette-color-action .material-symbols-sharp {
+  font-size: 20px;
+}
+
+.create-palette-empty {
+  padding: 30px;
+  color: #777;
+  text-align: center;
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.create-palette-footer {
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.create-palette-selection {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+
+.create-palette-selection strong {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.create-palette-selection p {
+  margin: 6px 0 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.create-palette-selected-preview {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.create-palette-selected-preview > span {
+  flex-shrink: 0;
+  width: 30px;
+  height: 36px;
+  margin-left: -2px;
+  border: 2px solid #202020;
+}
+
+.create-palette-preview-more {
+  display: grid;
+  place-items: center;
+  width: auto !important;
+  min-width: 36px;
+  padding: 0 5px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.create-palette-footer-actions {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
