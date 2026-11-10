@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import "../../styles/modals.css";
+import "../../styles/modals/AddColors.css";
 import dmcColors from "../../data/dmc-colors.json";
 
 type AddColorsModalProps = {
