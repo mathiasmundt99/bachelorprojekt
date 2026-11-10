@@ -4,12 +4,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "../components/canvas/Toolbar";
 import ColorPalette from "../components/canvas/ColorPalette";
 import PatternCanvas from "../components/canvas/PatternCanvas";
+import SwapToolPanel from "../components/canvas/SwapToolPanel";
+
+import { swapColors } from "../utils/canvas/swapColors";
 
 import type { Pattern, Tool } from "../types/pattern";
 
 import "../styles/CanvasPage.css";
 
-// Opretter et tomt mønster med den valgte størrelse
 function createEmptyPattern(width: number, height: number): Pattern {
   return {
     width,
@@ -18,7 +20,6 @@ function createEmptyPattern(width: number, height: number): Pattern {
   };
 }
 
-// Indstillinger sendt fra NewProjectModal
 type ProjectSettings = {
   width: number;
   height: number;
@@ -31,27 +32,81 @@ function CanvasPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Hent indstillinger fra NewProjectModal
   const projectSettings = location.state as ProjectSettings | null;
 
-  // Brug valgte mål eller standardstørrelse
   const width = projectSettings?.width ?? 30;
   const height = projectSettings?.height ?? 30;
 
-  // Valgt værktøj
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
-
-  // Valgt trådfarve
   const [selectedColor, setSelectedColor] = useState("#000000");
 
-  // Opret mønster med korrekt bredde og højde
   const [pattern, setPattern] = useState<Pattern>(() =>
     createEmptyPattern(width, height),
   );
 
+  // ========================================
+  // SWAP TOOL STATE
+  // ========================================
+
+  const [swapFromColor, setSwapFromColor] = useState<string | null>(null);
+
+  const [swapToColor, setSwapToColor] = useState<string | null>(null);
+
+  // ========================================
+  // CHANGE TOOL
+  // ========================================
+
+  function handleToolChange(tool: Tool) {
+    setSelectedTool(tool);
+
+    // Start forfra, når man skifter værktøj
+    setSwapFromColor(null);
+    setSwapToColor(null);
+  }
+
+  // ========================================
+  // SELECT COLOR FROM CANVAS
+  // ========================================
+
+  function handleSwapFromColor(color: string) {
+    setSwapFromColor(color);
+    setSwapToColor(null);
+  }
+
+  // ========================================
+  // SELECT COLOR FROM PALETTE
+  // ========================================
+
+  function handlePaletteColorChange(color: string) {
+    // Normal brug af paletten
+    if (selectedTool !== "swap") {
+      setSelectedColor(color);
+      return;
+    }
+
+    // Swap kræver først en farve fra canvas
+    if (!swapFromColor) {
+      return;
+    }
+
+    setSwapToColor(color);
+
+    setPattern((currentPattern) =>
+      swapColors(currentPattern, swapFromColor, color),
+    );
+  }
+
+  // ========================================
+  // RESET SWAP
+  // ========================================
+
+  function handleResetSwap() {
+    setSwapFromColor(null);
+    setSwapToColor(null);
+  }
+
   return (
     <div className="app">
-      {/* HEADER */}
       <header className="app-header">
         <button
           type="button"
@@ -72,14 +127,14 @@ function CanvasPage() {
         </button>
       </header>
 
-      {/* EDITOR */}
       <div className="editor-layout">
-        {/* LEFT SIDEBAR */}
         <aside className="left-sidebar">
-          <Toolbar selectedTool={selectedTool} onToolChange={setSelectedTool} />
+          <Toolbar
+            selectedTool={selectedTool}
+            onToolChange={handleToolChange}
+          />
         </aside>
 
-        {/* CANVAS */}
         <main className="canvas-area">
           <PatternCanvas
             pattern={pattern}
@@ -87,15 +142,23 @@ function CanvasPage() {
             selectedColor={selectedColor}
             onPatternChange={setPattern}
             onColorChange={setSelectedColor}
-            onToolChange={setSelectedTool}
+            onToolChange={handleToolChange}
+            onSwapColorSelect={handleSwapFromColor}
           />
+
+          {selectedTool === "swap" && (
+            <SwapToolPanel
+              fromColor={swapFromColor}
+              toColor={swapToColor}
+              onReset={handleResetSwap}
+            />
+          )}
         </main>
 
-        {/* RIGHT SIDEBAR */}
         <aside className="right-sidebar">
           <ColorPalette
             selectedColor={selectedColor}
-            onColorChange={setSelectedColor}
+            onColorChange={handlePaletteColorChange}
             pattern={pattern}
           />
         </aside>

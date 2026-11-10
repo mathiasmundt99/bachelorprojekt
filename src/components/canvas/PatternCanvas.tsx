@@ -4,9 +4,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Pattern, Tool } from "../../types/pattern";
 
 import { useCanvasViewport } from "../../hooks/useCanvasViewport";
-
 import { floodFill } from "../../utils/canvas/floodFill";
-
 import { drawPattern, CELL_SIZE } from "../../utils/canvas/drawPattern";
 
 type PatternCanvasProps = {
@@ -16,6 +14,7 @@ type PatternCanvasProps = {
   onPatternChange: (pattern: Pattern) => void;
   onColorChange: (color: string) => void;
   onToolChange: (tool: Tool) => void;
+  onSwapColorSelect: (color: string) => void;
 };
 
 function PatternCanvas({
@@ -25,6 +24,7 @@ function PatternCanvas({
   onPatternChange,
   onColorChange,
   onToolChange,
+  onSwapColorSelect,
 }: PatternCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -146,6 +146,18 @@ function PatternCanvas({
   }
 
   // ========================================
+  // SWAP TOOL
+  // ========================================
+
+  function pickSwapColor(x: number, y: number) {
+    const color = pattern.stitches[y][x];
+
+    if (color === null) return;
+
+    onSwapColorSelect(color);
+  }
+
+  // ========================================
   // POINTER DOWN
   // ========================================
 
@@ -164,6 +176,12 @@ function PatternCanvas({
 
     if (!cell) return;
 
+    // Swap Tool
+    if (selectedTool === "swap") {
+      pickSwapColor(cell.x, cell.y);
+      return;
+    }
+
     // Eyedropper
     if (selectedTool === "eyedropper") {
       pickColor(cell.x, cell.y);
@@ -177,8 +195,10 @@ function PatternCanvas({
     }
 
     // Pencil og Eraser
-    isPaintingRef.current = true;
-    paintCell(cell.x, cell.y);
+    if (selectedTool === "pencil" || selectedTool === "eraser") {
+      isPaintingRef.current = true;
+      paintCell(cell.x, cell.y);
+    }
   }
 
   // ========================================

@@ -1,0 +1,90 @@
+.swap-tool-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+
+  width: 290px;
+  padding: 16px;
+
+  background: #ffffff;
+  border: 1px solid #dedede;
+  border-radius: 12px;
+
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.swap-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.swap-panel-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #242424;
+}
+
+.swap-reset-button {
+  padding: 5px 10px;
+
+  border: 1px solid #dddddd;
+  border-radius: 6px;
+  background: #f7f7f7;
+
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.swap-reset-button:hover {
+  background: #eeeeee;
+}
+
+.swap-panel-description {
+  margin: 12px 0 16px;
+  color: #666666;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.swap-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.swap-color-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.swap-color-item span {
+  color: #555555;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.swap-color-box {
+  width: 62px;
+  height: 62px;
+
+  border: 2px solid #dddddd;
+  border-radius: 9px;
+}
+
+.swap-color-box.empty {
+  background: #f4f4f4;
+  border-style: dashed;
+}
+
+.swap-arrow {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #777777;
+}

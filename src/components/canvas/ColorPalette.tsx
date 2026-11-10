@@ -9,13 +9,6 @@ type ColorPaletteProps = {
   pattern: Pattern;
 };
 
-type ThreadColor = {
-  code: string;
-  name: string;
-  hex: string;
-  hue_id: number;
-};
-
 const gardenColorCodes = [
   "310",
   "666",
