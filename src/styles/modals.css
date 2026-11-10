@@ -1,0 +1,322 @@
+/* ========================================
+   ADD COLORS MODAL
+======================================== */
+
+/* Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* Modal container */
+.add-colors-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(1200px, 100%);
+  max-height: 90vh;
+  overflow: hidden;
+  border: 3px solid #202020;
+  background: #f7edf8;
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.modal-header {
+  position: relative;
+  flex-shrink: 0;
+  padding: 16px 28px;
+  border-bottom: 3px solid #202020;
+  background: #f04f98;
+}
+
+.modal-header h2 {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.modal-palette-name {
+  display: inline-block;
+  padding: 5px 9px;
+  border: 2px solid #202020;
+  background: #ffca45;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 24px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* ========================================
+   CONTENT AREA
+======================================== */
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px 24px 0;
+}
+
+.modal-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-content-header h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.modal-content-header input {
+  width: 340px;
+  max-width: 100%;
+  padding: 14px 18px;
+  border: 3px solid #202020;
+  background: white;
+  font-size: 15px;
+  box-shadow: 5px 5px 0 #202020;
+}
+
+.modal-library-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 16px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ========================================
+   LEFT COLUMN – DMC LIBRARY
+======================================== */
+
+.modal-color-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 8px 0;
+}
+
+/* Individual DMC color card */
+.modal-color-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid #202020;
+  background: #fffafa;
+  box-shadow: 3px 3px 0 #202020;
+}
+
+/* Existing palette color */
+.modal-color-card.is-existing {
+  background: #d9b9f1;
+}
+
+/* Newly selected color */
+.modal-color-card.is-new {
+  background: #d7f46a;
+}
+
+/* Color preview */
+.modal-color-preview {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 2px solid #202020;
+}
+
+/* Color information */
+.modal-color-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.modal-color-info strong {
+  font-size: 12px;
+}
+
+.modal-color-info span {
+  color: #666;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* Plus / check button */
+.modal-color-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 2px solid #202020;
+  background: white;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.modal-color-action:hover:not(:disabled) {
+  background: #f3f0f7;
+}
+
+.modal-color-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   RIGHT COLUMN – SELECTED COLORS
+======================================== */
+
+.modal-selected-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  padding: 20px;
+  border: 3px solid #202020;
+  background: white;
+  box-shadow: 5px 5px 0 #202020;
+  overflow: hidden;
+}
+
+/* Fixed heading */
+.modal-selected-panel h3 {
+  flex-shrink: 0;
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+/* Empty state */
+.modal-empty-selection {
+  color: #888;
+  font-size: 14px;
+}
+
+/* Independently scrollable list */
+.modal-selected-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Selected color item */
+.modal-selected-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 8px;
+  border: 2px solid #202020;
+  background: #d7f46a;
+}
+
+/* Color preview */
+.modal-selected-preview {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 2px solid #202020;
+}
+
+/* DMC code */
+.modal-selected-code {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Remove button */
+.modal-selected-item button {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 3px solid #202020;
+  background: #fffafa;
+}
+
+.modal-footer > div {
+  margin-right: auto;
+}
+
+.modal-footer h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.modal-footer p {
+  margin: 0;
+  color: #888;
+  font-size: 12px;
+}
+
+.modal-cancel,
+.modal-add {
+  padding: 14px 24px;
+  border: 3px solid #202020;
+  background: white;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 5px 5px 0 #202020;
+}
+
+.modal-add {
+  background: #ffca45;
+}
+
+.modal-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

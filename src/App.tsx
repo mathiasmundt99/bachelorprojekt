@@ -9,7 +9,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/canvas/:id" element={<CanvasPage />} />
+      <Route path="/canvas" element={<CanvasPage />} />
       <Route path="/inventory" element={<InventoryPage />} />
       <Route path="/finished/:id" element={<FinishedPage />} />
     </Routes>
@@ -17,3 +17,4 @@ function App() {
 }
 
 export default App;
+/* <Route path="/canvas/:id" element={<CanvasPage />} />; */

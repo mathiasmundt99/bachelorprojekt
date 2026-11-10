@@ -15,7 +15,7 @@ function Navbar() {
 
         <NavLink to="/InventoryPage">Thread stash</NavLink>
 
-        <NavLink to="/style-guide">Style guide</NavLink>
+        <NavLink to="/canvas">Canvas</NavLink>
       </nav>
     </header>
   );
