@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import CreatePaletteModal from "./CreatePaletteModal";
-import dmcColors from "../../data/dmc-colors.json";
+
 import type { CustomPalette } from "../../types/palette";
+
+import {
+  getUserColorPalettes,
+  getAllDMCColors,
+  type UserColorPalette,
+  type DMCColor,
+} from "../../services/colorPaletteService";
 
 import "../../styles/modals/NewProject.css";
 
@@ -21,24 +29,9 @@ const fabricColors = [
   { name: "Black", hex: "#292929" },
 ];
 
-// Midlertidige eksempelpaletter
-const paletteOptions = [
-  {
-    id: "all",
-    name: "All thread colors",
-    description: "All available DMC colors",
-    colors: ["#f04f98", "#ffca45", "#d7f46a", "#a6d8f0"],
-  },
-  {
-    id: "garden",
-    name: "Garden favorites",
-    description: "Saved palette · 12 colors",
-    colors: ["#e86b8b", "#8bbf77", "#f2c96d", "#a98ac7"],
-  },
-];
-
 function NewProjectModal({ onClose }: NewProjectModalProps) {
   const navigate = useNavigate();
+
   // PATTERN SIZE
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(80);
@@ -49,27 +42,52 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
   // COLOR PALETTE
   const [selectedPalette, setSelectedPalette] = useState("all");
+  const [customPalettes, setCustomPalettes] = useState<UserColorPalette[]>([]);
+  const [allColors, setAllColors] = useState<DMCColor[]>([]);
 
-  // Paletter oprettet af brugeren
-  const [customPalettes, setCustomPalettes] = useState<CustomPalette[]>([]);
+  const [loadingPalettes, setLoadingPalettes] = useState(true);
+  const [paletteError, setPaletteError] = useState("");
 
-  // Styrer om CreatePaletteModal vises
+  // CREATE PALETTE MODAL
   const [isCreatingPalette, setIsCreatingPalette] = useState(false);
 
-  // BEREGNING AF STØRRELSE I CM
+  // SIZE CALCULATOR
   const widthInCm = (width / fabricCount) * 2.54;
   const heightInCm = (height / fabricCount) * 2.54;
 
-  // GEM EN NY PALETTE
-  const handlePaletteSave = (palette: CustomPalette) => {
-    setCustomPalettes((previous) => [...previous, palette]);
+  // FETCH USER PALETTES AND DMC COLORS
+  const loadPalettes = async () => {
+    try {
+      setPaletteError("");
 
-    // Vælg automatisk den nye palette
+      const [palettes, colors] = await Promise.all([
+        getUserColorPalettes(),
+        getAllDMCColors(),
+      ]);
+
+      setCustomPalettes(palettes);
+      setAllColors(colors);
+    } catch (error) {
+      console.error("Error loading palettes:", error);
+      setPaletteError("Could not load your saved palettes.");
+    } finally {
+      setLoadingPalettes(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPalettes();
+  }, []);
+
+  // SAVE NEW PALETTE
+  const handlePaletteSave = async (palette: CustomPalette) => {
+    await loadPalettes();
+
     setSelectedPalette(palette.id);
-
-    // Gå tilbage til Pattern setup
     setIsCreatingPalette(false);
   };
+
+  // CREATE PATTERN
   const handleCreatePattern = () => {
     navigate("/canvas", {
       state: {
@@ -81,24 +99,25 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
       },
     });
   };
-  // KOMBINÉR EKSEMPELPALetter OG NYE PALETTER
+
+  // ALL PALETTE OPTIONS
   const allPaletteOptions = [
-    ...paletteOptions,
+    {
+      id: "all",
+      name: "All thread colors",
+      description: `${allColors.length} available DMC colors`,
+      colors: allColors.slice(0, 4).map((color) => color.hex),
+    },
 
     ...customPalettes.map((palette) => ({
-      id: palette.id,
+      id: String(palette.palette_id),
       name: palette.name,
-      description: `Custom palette · ${palette.colorCodes.length} colors`,
-
-      colors: palette.colorCodes.slice(0, 4).map((code) => {
-        const dmcColor = dmcColors.find((color) => color.code === code);
-
-        return dmcColor?.hex ?? "#ffffff";
-      }),
+      description: `Saved palette · ${palette.colors.length} colors`,
+      colors: palette.colors.slice(0, 4).map((color) => color.hex),
     })),
   ];
 
-  // VIS CREATE PALETTE MODAL
+  // SHOW CREATE PALETTE MODAL
   if (isCreatingPalette) {
     return (
       <CreatePaletteModal
@@ -114,7 +133,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="new-project-title">
+        aria-labelledby="new-project-title"
+      >
         {/* HEADER */}
         <header className="new-project-header">
           <span className="new-project-label">NEW PROJECT</span>
@@ -123,7 +143,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             type="button"
             className="new-project-close"
             onClick={onClose}
-            aria-label="Close modal">
+            aria-label="Close modal"
+          >
             ×
           </button>
 
@@ -138,7 +159,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
           <section className="new-project-section">
             <div className="new-project-section-heading">
               <span className="new-project-section-number">01</span>
-
               <h3>Pattern size</h3>
             </div>
 
@@ -158,7 +178,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   value={width}
                   onChange={(event) => {
                     const value = Number(event.target.value);
-
                     setWidth(Math.max(1, Math.round(value)));
                   }}
                 />
@@ -175,7 +194,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   value={height}
                   onChange={(event) => {
                     const value = Number(event.target.value);
-
                     setHeight(Math.max(1, Math.round(value)));
                   }}
                 />
@@ -204,7 +222,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
           <section className="new-project-section fabric-section">
             <div className="new-project-section-heading">
               <span className="new-project-section-number">02</span>
-
               <h3>Fabric</h3>
             </div>
 
@@ -223,7 +240,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                     fabricCount === count ? "selected" : ""
                   }`}
                   onClick={() => setFabricCount(count)}
-                  aria-pressed={fabricCount === count}>
+                  aria-pressed={fabricCount === count}
+                >
                   <strong>{count}</strong>
                   <span>COUNT</span>
                 </button>
@@ -240,13 +258,12 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   className={`fabric-color-option ${
                     fabricColor === color.name ? "selected" : ""
                   }`}
-                  style={{
-                    backgroundColor: color.hex,
-                  }}
+                  style={{ backgroundColor: color.hex }}
                   onClick={() => setFabricColor(color.name)}
                   aria-label={color.name}
                   aria-pressed={fabricColor === color.name}
-                  title={color.name}>
+                  title={color.name}
+                >
                   {fabricColor === color.name && (
                     <span className="fabric-color-check">✓</span>
                   )}
@@ -263,7 +280,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
           <section className="new-project-section palette-section">
             <div className="new-project-section-heading">
               <span className="new-project-section-number">03</span>
-
               <h3>Color palette</h3>
             </div>
 
@@ -271,47 +287,53 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
               Start with every color, or one of your saved sets.
             </p>
 
-            <div className="new-project-palette-options">
-              {allPaletteOptions.map((palette) => (
-                <button
-                  key={palette.id}
-                  type="button"
-                  className={`new-project-palette-option ${
-                    selectedPalette === palette.id ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedPalette(palette.id)}
-                  aria-pressed={selectedPalette === palette.id}>
-                  <span className="new-project-palette-radio">
-                    {selectedPalette === palette.id && (
-                      <span className="new-project-palette-radio-dot" />
-                    )}
-                  </span>
+            {loadingPalettes ? (
+              <p>Loading your palettes...</p>
+            ) : paletteError ? (
+              <p>{paletteError}</p>
+            ) : (
+              <div className="new-project-palette-options">
+                {allPaletteOptions.map((palette) => (
+                  <button
+                    key={palette.id}
+                    type="button"
+                    className={`new-project-palette-option ${
+                      selectedPalette === palette.id ? "selected" : ""
+                    }`}
+                    onClick={() => setSelectedPalette(palette.id)}
+                    aria-pressed={selectedPalette === palette.id}
+                  >
+                    <span className="new-project-palette-radio">
+                      {selectedPalette === palette.id && (
+                        <span className="new-project-palette-radio-dot" />
+                      )}
+                    </span>
 
-                  <span className="new-project-palette-info">
-                    <strong>{palette.name}</strong>
-                    <span>{palette.description}</span>
-                  </span>
+                    <span className="new-project-palette-info">
+                      <strong>{palette.name}</strong>
+                      <span>{palette.description}</span>
+                    </span>
 
-                  <span className="new-project-palette-preview">
-                    {palette.colors.map((color, index) => (
-                      <span
-                        key={index}
-                        className="new-project-palette-swatch"
-                        style={{
-                          backgroundColor: color,
-                        }}
-                      />
-                    ))}
-                  </span>
-                </button>
-              ))}
-            </div>
+                    <span className="new-project-palette-preview">
+                      {palette.colors.map((color, index) => (
+                        <span
+                          key={index}
+                          className="new-project-palette-swatch"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* CREATE NEW PALETTE */}
             <button
               type="button"
               className="new-project-palette-add"
-              onClick={() => setIsCreatingPalette(true)}>
+              onClick={() => setIsCreatingPalette(true)}
+            >
               + Create a new palette
             </button>
           </section>
@@ -322,14 +344,16 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
           <button
             type="button"
             className="new-project-cancel"
-            onClick={onClose}>
+            onClick={onClose}
+          >
             CANCEL
           </button>
 
           <button
             type="button"
             className="new-project-create"
-            onClick={handleCreatePattern}>
+            onClick={handleCreatePattern}
+          >
             CREATE PATTERN →
           </button>
         </footer>

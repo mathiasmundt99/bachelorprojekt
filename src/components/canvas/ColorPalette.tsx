@@ -1,26 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Pattern } from "../../types/pattern";
-import dmcColors from "../../data/dmc-colors.json";
 import AddColorsModal from "../modals/AddColorsModal";
+
+import {
+  getAllDMCColors,
+  getUserColorPalettes,
+  type DMCColor,
+  type UserColorPalette,
+} from "../../services/colorPaletteService";
 
 type ColorPaletteProps = {
   selectedColor: string;
   onColorChange: (color: string) => void;
   pattern: Pattern;
 };
-
-const gardenColorCodes = [
-  "310",
-  "666",
-  "699",
-  "797",
-  "444",
-  "740",
-  "602",
-  "550",
-];
-
-const basicColorCodes = ["B5200", "666", "699", "797"];
 
 function ColorPalette({
   selectedColor,
@@ -29,23 +22,54 @@ function ColorPalette({
 }: ColorPaletteProps) {
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("number");
-  const [palette, setPalette] = useState("garden");
+
+  const [selectedPaletteId, setSelectedPaletteId] = useState("all");
+
+  const [palettes, setPalettes] = useState<UserColorPalette[]>([]);
+  const [allColors, setAllColors] = useState<DMCColor[]>([]);
+
   const [isAddColorsOpen, setIsAddColorsOpen] = useState(false);
-  const activeColors = dmcColors.filter((color) => {
-    if (palette === "basic") {
-      return basicColorCodes.includes(color.code);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Load palettes and DMC colors
+  async function loadPalettes() {
+    try {
+      setError("");
+
+      const [userPalettes, dmcColors] = await Promise.all([
+        getUserColorPalettes(),
+        getAllDMCColors(),
+      ]);
+
+      setPalettes(userPalettes);
+      setAllColors(dmcColors);
+    } catch (err) {
+      console.error("Error loading color palettes:", err);
+      setError("Could not load color palettes.");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    if (palette === "garden") {
-      return gardenColorCodes.includes(color.code);
-    }
+  useEffect(() => {
+    loadPalettes();
+  }, []);
 
-    return true;
-  });
+  // Find active palette
+  const activePalette = palettes.find(
+    (palette) => String(palette.palette_id) === selectedPaletteId,
+  );
 
+  // Get active colors
+  const activeColors = activePalette ? activePalette.colors : allColors;
+
+  // Get colors used in pattern
   const usedColors = new Set(
     pattern.stitches.flat().filter((color) => color !== null),
   );
+
+  // Filter and sort colors
   const displayedColors = [...activeColors]
     .filter((color) => {
       if (filter === "used") {
@@ -71,21 +95,28 @@ function ColorPalette({
 
         <select
           id="active-palette"
-          value={palette}
-          onChange={(event) => setPalette(event.target.value)}>
+          value={selectedPaletteId}
+          onChange={(event) => setSelectedPaletteId(event.target.value)}
+        >
           <option value="all">All DMC colors</option>
-          <option value="garden">Garden favorites</option>
-          <option value="basic">Basic colors</option>
+
+          {palettes.map((palette) => (
+            <option key={palette.palette_id} value={String(palette.palette_id)}>
+              {palette.name}
+            </option>
+          ))}
         </select>
       </div>
 
       <div className="palette-controls">
         <div>
           <label htmlFor="color-filter">Filter</label>
+
           <select
             id="color-filter"
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}>
+            onChange={(event) => setFilter(event.target.value)}
+          >
             <option value="all">All colors</option>
             <option value="used">Used colors</option>
           </select>
@@ -93,56 +124,70 @@ function ColorPalette({
 
         <div>
           <label htmlFor="color-sort">Sort</label>
+
           <select
             id="color-sort"
             value={sort}
-            onChange={(event) => setSort(event.target.value)}>
+            onChange={(event) => setSort(event.target.value)}
+          >
             <option value="number">DMC number</option>
             <option value="hue">Color hue</option>
           </select>
         </div>
       </div>
 
-      <div className="color-grid">
-        {displayedColors.map((color) => (
-          <button
-            key={color.code}
-            type="button"
-            className={
-              selectedColor === color.hex
-                ? "color-swatch selected"
-                : "color-swatch"
-            }
-            onClick={() => onColorChange(color.hex)}
-            title={`${color.code} - ${color.name}`}
-            aria-label={`Select ${color.name}, DMC ${color.code}`}>
-            <span
-              className="swatch-inner"
-              style={{ backgroundColor: color.hex }}>
-              <span className="swatch-code">{color.code}</span>
-            </span>
-          </button>
-        ))}
+      {loading ? (
+        <p>Loading colors...</p>
+      ) : error ? (
+        <p>{error}</p>
+      ) : (
+        <div className="color-grid">
+          {displayedColors.map((color) => (
+            <button
+              key={color.code}
+              type="button"
+              className={
+                selectedColor === color.hex
+                  ? "color-swatch selected"
+                  : "color-swatch"
+              }
+              onClick={() => onColorChange(color.hex)}
+              title={`${color.code} - ${color.name}`}
+              aria-label={`Select ${color.name}, DMC ${color.code}`}
+            >
+              <span
+                className="swatch-inner"
+                style={{ backgroundColor: color.hex }}
+              >
+                <span className="swatch-code">{color.code}</span>
+              </span>
+            </button>
+          ))}
 
-        {palette !== "all" && (
-          <button
-            type="button"
-            className="add-color-button"
-            onClick={() => setIsAddColorsOpen(true)}
-            title="Add colors coming later">
-            +
-          </button>
-        )}
-        {isAddColorsOpen && (
-          <AddColorsModal
-            paletteName={
-              palette === "garden" ? "Garden favorites" : "Basic colors"
-            }
-            existingColorCodes={activeColors.map((color) => color.code)}
-            onClose={() => setIsAddColorsOpen(false)}
-          />
-        )}
-      </div>
+          {selectedPaletteId !== "all" && activePalette && (
+            <button
+              type="button"
+              className="add-color-button"
+              onClick={() => setIsAddColorsOpen(true)}
+              title="Add colors"
+            >
+              +
+            </button>
+          )}
+
+          {isAddColorsOpen && activePalette && (
+            <AddColorsModal
+              paletteId={activePalette.palette_id}
+              paletteName={activePalette.name}
+              existingColorCodes={activePalette.colors.map(
+                (color) => color.code,
+              )}
+              onSaved={loadPalettes}
+              onClose={() => setIsAddColorsOpen(false)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
