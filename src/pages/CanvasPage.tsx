@@ -6,6 +6,7 @@ import ColorPalette from "../components/canvas/ColorPalette";
 import PatternCanvas from "../components/canvas/PatternCanvas";
 import SwapToolPanel from "../components/canvas/SwapToolPanel";
 
+import { usePatternHistory } from "../hooks/usePatternHistory";
 import { swapColors } from "../utils/canvas/swapColors";
 
 import type { Pattern, Tool } from "../types/pattern";
@@ -40,9 +41,20 @@ function CanvasPage() {
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
   const [selectedColor, setSelectedColor] = useState("#000000");
 
-  const [pattern, setPattern] = useState<Pattern>(() =>
-    createEmptyPattern(width, height),
-  );
+  // ========================================
+  // PATTERN HISTORY
+  // ========================================
+
+  const {
+    pattern,
+    setPattern,
+    beginStroke,
+    endStroke,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = usePatternHistory(createEmptyPattern(width, height));
 
   // ========================================
   // SWAP TOOL STATE
@@ -59,7 +71,6 @@ function CanvasPage() {
   function handleToolChange(tool: Tool) {
     setSelectedTool(tool);
 
-    // Start forfra, når man skifter værktøj
     setSwapFromColor(null);
     setSwapToColor(null);
   }
@@ -78,16 +89,12 @@ function CanvasPage() {
   // ========================================
 
   function handlePaletteColorChange(color: string) {
-    // Normal brug af paletten
     if (selectedTool !== "swap") {
       setSelectedColor(color);
       return;
     }
 
-    // Swap kræver først en farve fra canvas
-    if (!swapFromColor) {
-      return;
-    }
+    if (!swapFromColor) return;
 
     setSwapToColor(color);
 
@@ -132,6 +139,10 @@ function CanvasPage() {
           <Toolbar
             selectedTool={selectedTool}
             onToolChange={handleToolChange}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
         </aside>
 
@@ -144,6 +155,8 @@ function CanvasPage() {
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}
             onSwapColorSelect={handleSwapFromColor}
+            onStrokeStart={beginStroke}
+            onStrokeEnd={endStroke}
           />
 
           {selectedTool === "swap" && (

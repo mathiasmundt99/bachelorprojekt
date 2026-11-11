@@ -11,10 +11,12 @@ type PatternCanvasProps = {
   pattern: Pattern;
   selectedTool: Tool;
   selectedColor: string;
-  onPatternChange: (pattern: Pattern) => void;
+  onPatternChange: (update: Pattern | ((current: Pattern) => Pattern)) => void;
   onColorChange: (color: string) => void;
   onToolChange: (tool: Tool) => void;
   onSwapColorSelect: (color: string) => void;
+  onStrokeStart: () => void;
+  onStrokeEnd: () => void;
 };
 
 function PatternCanvas({
@@ -25,6 +27,8 @@ function PatternCanvas({
   onColorChange,
   onToolChange,
   onSwapColorSelect,
+  onStrokeStart,
+  onStrokeEnd,
 }: PatternCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -102,21 +106,25 @@ function PatternCanvas({
       return;
     }
 
-    const newStitches = pattern.stitches.map((row) => [...row]);
-
-    if (selectedTool === "pencil") {
-      newStitches[y][x] = selectedColor;
-    }
-
-    if (selectedTool === "eraser") {
-      newStitches[y][x] = null;
-    }
-
     lastPaintedCellRef.current = { x, y };
 
-    onPatternChange({
-      ...pattern,
-      stitches: newStitches,
+    onPatternChange((currentPattern) => {
+      const oldColor = currentPattern.stitches[y][x];
+
+      const newColor = selectedTool === "eraser" ? null : selectedColor;
+
+      if (oldColor === newColor) {
+        return currentPattern;
+      }
+
+      const newStitches = currentPattern.stitches.map((row) => [...row]);
+
+      newStitches[y][x] = newColor;
+
+      return {
+        ...currentPattern,
+        stitches: newStitches,
+      };
     });
   }
 
@@ -125,11 +133,9 @@ function PatternCanvas({
   // ========================================
 
   function fillArea(startX: number, startY: number) {
-    const updatedPattern = floodFill(pattern, startX, startY, selectedColor);
-
-    if (updatedPattern !== pattern) {
-      onPatternChange(updatedPattern);
-    }
+    onPatternChange((currentPattern) =>
+      floodFill(currentPattern, startX, startY, selectedColor),
+    );
   }
 
   // ========================================
@@ -166,7 +172,6 @@ function PatternCanvas({
 
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    // Midterste museknap = panorering
     if (event.button === 1) {
       startPan(event);
       return;
@@ -176,27 +181,25 @@ function PatternCanvas({
 
     if (!cell) return;
 
-    // Swap Tool
     if (selectedTool === "swap") {
       pickSwapColor(cell.x, cell.y);
       return;
     }
 
-    // Eyedropper
     if (selectedTool === "eyedropper") {
       pickColor(cell.x, cell.y);
       return;
     }
 
-    // Fill
     if (selectedTool === "fill") {
       fillArea(cell.x, cell.y);
       return;
     }
 
-    // Pencil og Eraser
     if (selectedTool === "pencil" || selectedTool === "eraser") {
       isPaintingRef.current = true;
+
+      onStrokeStart();
       paintCell(cell.x, cell.y);
     }
   }
@@ -206,12 +209,8 @@ function PatternCanvas({
   // ========================================
 
   function handlePointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
-    // Panorering
-    if (movePan(event)) {
-      return;
-    }
+    if (movePan(event)) return;
 
-    // Tegning
     if (!isPaintingRef.current) return;
 
     const cell = getCellFromPointer(event);
@@ -226,6 +225,10 @@ function PatternCanvas({
   // ========================================
 
   function handlePointerUp(event: ReactPointerEvent<HTMLCanvasElement>) {
+    if (isPaintingRef.current) {
+      onStrokeEnd();
+    }
+
     isPaintingRef.current = false;
     lastPaintedCellRef.current = null;
 
