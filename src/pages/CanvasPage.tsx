@@ -28,6 +28,7 @@ type ProjectSettings = {
   fabricCount: number;
   fabricColor: string;
   selectedPalette: string;
+  pattern?: Pattern;
 };
 
 function CanvasPage() {
@@ -39,17 +40,13 @@ function CanvasPage() {
   const width = projectSettings?.width ?? 30;
   const height = projectSettings?.height ?? 30;
 
-  // ========================================
   // PROJECT NAME
-  // ========================================
-
   const [projectName, setProjectName] = useState(
     () => projectSettings?.projectName?.trim() || "Untitled Project",
   );
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftProjectName, setDraftProjectName] = useState(projectName);
-
   const cancelNameEditRef = useRef(false);
 
   function startEditingName() {
@@ -65,7 +62,6 @@ function CanvasPage() {
     }
 
     setProjectName(draftProjectName.trim() || "Untitled Project");
-
     setIsEditingName(false);
   }
 
@@ -75,17 +71,14 @@ function CanvasPage() {
     setIsEditingName(false);
   }
 
-  // ========================================
   // TOOLS
-  // ========================================
-
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
-
   const [selectedColor, setSelectedColor] = useState("#000000");
 
-  // ========================================
   // PATTERN HISTORY
-  // ========================================
+  const initialPatternRef = useRef<Pattern>(
+    projectSettings?.pattern ?? createEmptyPattern(width, height),
+  );
 
   const {
     pattern,
@@ -96,14 +89,10 @@ function CanvasPage() {
     redo,
     canUndo,
     canRedo,
-  } = usePatternHistory(createEmptyPattern(width, height));
+  } = usePatternHistory(initialPatternRef.current);
 
-  // ========================================
   // SWAP TOOL
-  // ========================================
-
   const [swapFromColor, setSwapFromColor] = useState<string | null>(null);
-
   const [swapToColor, setSwapToColor] = useState<string | null>(null);
 
   function handleToolChange(tool: Tool) {
@@ -137,9 +126,18 @@ function CanvasPage() {
     setSwapToColor(null);
   }
 
-  // ========================================
-  // RENDER
-  // ========================================
+  // FINISH PAGE
+  function handleFinish() {
+    navigate("/finish", {
+      state: {
+        ...projectSettings,
+        projectName,
+        width: pattern.width,
+        height: pattern.height,
+        pattern,
+      },
+    });
+  }
 
   return (
     <div className="app">
@@ -151,7 +149,6 @@ function CanvasPage() {
           ← Back to home
         </button>
 
-        {/* EDITABLE PROJECT NAME */}
         <div className="project-name-container">
           {isEditingName ? (
             <input
@@ -193,7 +190,7 @@ function CanvasPage() {
           <span>All changes saved</span>
         </div>
 
-        <button type="button" className="next-button">
+        <button type="button" className="next-button" onClick={handleFinish}>
           › Done / Next
         </button>
       </header>

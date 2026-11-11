@@ -5,7 +5,7 @@ import { supabase } from "./lib/supabase";
 import HomePage from "./pages/HomePage";
 import CanvasPage from "./pages/CanvasPage";
 import InventoryPage from "./pages/InventoryPage";
-import FinishedPage from "./pages/FinishedPage";
+import FinishedPage from "./pages/FinishPage";
 
 function App() {
   useEffect(() => {
@@ -38,7 +38,7 @@ function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/canvas" element={<CanvasPage />} />
       <Route path="/inventory" element={<InventoryPage />} />
-      <Route path="/finished/:id" element={<FinishedPage />} />
+      <Route path="/finish" element={<FinishedPage />} />
     </Routes>
   );
 }
