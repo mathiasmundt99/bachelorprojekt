@@ -39,6 +39,10 @@ const paletteOptions = [
 
 function NewProjectModal({ onClose }: NewProjectModalProps) {
   const navigate = useNavigate();
+
+  // PROJECT NAME
+  const [projectName, setProjectName] = useState("Untitled Project");
+
   // PATTERN SIZE
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(80);
@@ -64,15 +68,15 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
   const handlePaletteSave = (palette: CustomPalette) => {
     setCustomPalettes((previous) => [...previous, palette]);
 
-    // Vælg automatisk den nye palette
     setSelectedPalette(palette.id);
-
-    // Gå tilbage til Pattern setup
     setIsCreatingPalette(false);
   };
+
+  // CREATE PATTERN
   const handleCreatePattern = () => {
     navigate("/canvas", {
       state: {
+        projectName: projectName.trim() || "Untitled Project",
         width,
         height,
         fabricCount,
@@ -81,7 +85,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
       },
     });
   };
-  // KOMBINÉR EKSEMPELPALetter OG NYE PALETTER
+
+  // KOMBINÉR EKSEMPELPALETTER OG NYE PALETTER
   const allPaletteOptions = [
     ...paletteOptions,
 
@@ -134,6 +139,20 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
         {/* CONTENT */}
         <div className="new-project-content">
+          {/* PROJECT NAME */}
+          <section className="new-project-name-section">
+            <label htmlFor="new-project-name">PROJECT NAME</label>
+
+            <input
+              id="new-project-name"
+              type="text"
+              value={projectName}
+              onChange={(event) => setProjectName(event.target.value)}
+              maxLength={100}
+              placeholder="Untitled Project"
+            />
+          </section>
+
           {/* 01 - PATTERN SIZE */}
           <section className="new-project-section">
             <div className="new-project-section-heading">
@@ -158,7 +177,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   value={width}
                   onChange={(event) => {
                     const value = Number(event.target.value);
-
                     setWidth(Math.max(1, Math.round(value)));
                   }}
                 />
@@ -175,7 +193,6 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   value={height}
                   onChange={(event) => {
                     const value = Number(event.target.value);
-
                     setHeight(Math.max(1, Math.round(value)));
                   }}
                 />

@@ -1,130 +1,203 @@
-/* Header */
+/* ========================================
+   CANVAS PAGE
+   Same visual style as Add Colors Modal
+======================================== */
+
 .app {
   display: flex;
   flex-direction: column;
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
+
+  background: #f7edf8;
+  color: #202020;
 }
+
+/* ========================================
+   HEADER
+======================================== */
+
 .app-header {
-  height: 90px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 24px;
+
+  height: 90px;
+  flex-shrink: 0;
   padding: 0 28px;
-  border-bottom: 2px solid #202020;
-  background: #fff;
+
+  border-bottom: 3px solid #202020;
+  background: #f04f98;
 }
 
 .app-header h1 {
   margin: 0;
+
   font-size: 26px;
+  font-weight: 900;
   white-space: nowrap;
 }
 
 .back-button,
 .next-button {
-  min-height: 48px;
+  min-height: 46px;
   padding: 0 18px;
-  border: 2px solid #202020;
+
+  border: 3px solid #202020;
   border-radius: 0;
-  background: white;
+
+  background: #fffafa;
   color: #202020;
-  font-weight: 700;
-  font-size: 14px;
+
+  font-size: 13px;
+  font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+
+  box-shadow: 4px 4px 0 #202020;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.back-button:hover,
+.next-button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #202020;
 }
 
 .next-button {
   margin-left: auto;
-  background: #d7f46a;
+  background: #ffca45;
 }
+
+/* Save status */
 
 .save-status {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #777;
+
+  padding: 10px 12px;
+
+  border: 2px solid #202020;
+  background: #fffafa;
+
+  color: #202020;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .save-indicator {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+
+  border: 2px solid #202020;
   background: #63c9b5;
-  border: 1px solid #202020;
 }
 
-/* Main editor layout */
+/* ========================================
+   EDITOR LAYOUT
+======================================== */
 
 .editor-layout {
   display: grid;
   grid-template-columns: 100px minmax(0, 1fr) 320px;
+
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Left sidebar */
+/* ========================================
+   LEFT SIDEBAR
+======================================== */
 
 .left-sidebar {
   min-height: 0;
   overflow-y: auto;
-  border-right: 2px solid #202020;
-  background: #fff;
+
+  border-right: 3px solid #202020;
+  background: #f7edf8;
 }
 
+/* ========================================
+   TOOLBAR
+======================================== */
+
 .toolbar {
-  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 12px;
-  background: #fff;
+  gap: 20px;
+
+  min-height: 100%;
+  padding: 12px 10px;
+
+  background: #f7edf8;
 }
 
 .toolbar-tools,
 .toolbar-bottom {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .toolbar-bottom {
-  border-top: 1px solid #ccc;
   padding-top: 16px;
+  border-top: 3px solid #202020;
 }
 
+/* Individual tool */
+
 .tool-button {
-  min-height: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  border: 2px solid transparent;
-  background: white;
+
+  min-height: 68px;
+  padding: 8px 4px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
   color: #202020;
+
   cursor: pointer;
+  box-shadow: 3px 3px 0 #202020;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .tool-button:hover:not(:disabled) {
-  background: #f3f0f7;
+  background: #d9b9f1;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #202020;
 }
 
 .tool-button.active {
-  background: #7254c7;
   border-color: #202020;
-  color: #fff;
+  background: #d7f46a;
+  color: #202020;
+
+  box-shadow: 3px 3px 0 #202020;
 }
 
 .tool-button:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .tool-icon {
@@ -133,16 +206,22 @@
 }
 
 .tool-label {
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
 }
 
-/* Center workspace */
+/* ========================================
+   CENTER WORKSPACE
+======================================== */
 
 .canvas-area {
   position: relative;
+
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+
   background: #eee8ef;
 }
 
@@ -156,22 +235,28 @@
   display: block;
   width: 100%;
   height: 100%;
+
   touch-action: none;
   user-select: none;
   cursor: crosshair;
 }
 
-/* Right sidebar */
+/* ========================================
+   RIGHT SIDEBAR
+======================================== */
 
 .right-sidebar {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
-  border-left: 2px solid #202020;
-  background: #fff;
+
+  border-left: 3px solid #202020;
+  background: #f7edf8;
 }
 
-/* Palette */
+/* ========================================
+   COLOR PALETTE
+======================================== */
 
 .color-palette {
   display: flex;
@@ -179,42 +264,63 @@
   width: 100%;
 }
 
+/* ========================================
+   PALETTE HEADER
+======================================== */
+
 .palette-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
+
   padding: 22px 18px;
-  background: #d7f46a;
-  border-bottom: 2px solid #202020;
+
+  border-bottom: 3px solid #202020;
+  background: #d9b9f1;
 }
 
 .palette-header label,
 .palette-controls label {
   font-family: monospace;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
+/* Palette dropdown */
 
 .palette-header select {
   width: 100%;
   height: 46px;
   padding: 0 12px;
-  border: 2px solid #202020;
+
+  border: 3px solid #202020;
   border-radius: 0;
-  background: #f4f7d4;
+
+  background: #fffafa;
+  color: #202020;
+
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #202020;
 }
 
-/* Filter and sorting */
+/* ========================================
+   FILTER AND SORT
+======================================== */
 
 .palette-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  padding: 16px 18px;
+  gap: 12px;
+
+  padding: 20px 18px;
+
+  border-bottom: 2px solid #202020;
+  background: #f7edf8;
 }
 
 .palette-controls > div {
@@ -229,76 +335,223 @@
   min-width: 0;
   height: 42px;
   padding: 0 8px;
+
   border: 2px solid #202020;
   border-radius: 0;
-  background: white;
+
+  background: #fffafa;
+  color: #202020;
+
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  cursor: pointer;
+
+  box-shadow: 3px 3px 0 #202020;
 }
 
-/* Color grid */
+/* ========================================
+   COLOR GRID
+======================================== */
+
 .color-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
-  padding: 18px;
+
+  padding: 20px 18px;
 }
+
+/* Individual color */
 
 .color-swatch {
   display: flex;
   align-items: center;
   justify-content: center;
+
   aspect-ratio: 1;
   min-width: 0;
   padding: 0;
+
   border: 2px solid #202020;
   border-radius: 0;
-  background: white;
+
+  background: #fffafa;
   cursor: pointer;
+
+  box-shadow: 3px 3px 0 #202020;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .color-swatch:hover {
-  background: #f3f0f7;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #202020;
 }
 
 .color-swatch.selected {
-  outline: 5px solid #ec65a0;
-  outline-offset: 5px;
+  outline: 4px solid #f04f98;
+  outline-offset: 4px;
 }
+
+/* Color preview */
 
 .swatch-inner {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
+
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
+
   border: none;
 }
+
+/* DMC number */
 
 .swatch-code {
   display: flex;
   align-items: center;
   justify-content: center;
+
   min-width: 0;
   min-height: 0;
-  padding: 4px 8px;
+  padding: 4px 6px;
+
   border: 1px solid #202020;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
+
   color: #202020;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
 }
+
+/* ========================================
+   ADD COLOR BUTTON
+======================================== */
+
 .add-color-button {
   aspect-ratio: 1;
+
   border: 2px solid #202020;
-  background: white;
+  border-radius: 0;
+
+  background: #ffca45;
+  color: #202020;
+
   font-size: 30px;
+  font-weight: 800;
   cursor: pointer;
+
+  box-shadow: 3px 3px 0 #202020;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.add-color-button:hover {
+  background: #d7f46a;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #202020;
 }
 
 .add-color-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ========================================
+   FOCUS STYLES
+======================================== */
+
+.tool-button:focus-visible,
+.back-button:focus-visible,
+.next-button:focus-visible,
+.color-swatch:focus-visible,
+.add-color-button:focus-visible,
+.palette-header select:focus-visible,
+.palette-controls select:focus-visible {
+  outline: 3px solid #7254c7;
+  outline-offset: 4px;
+}
+
+/* ========================================
+   EDITABLE PROJECT NAME
+======================================== */
+
+.project-name-container {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+  max-width: 350px;
+}
+
+.project-name-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+  padding: 10px 12px;
+
+  border: 2px solid transparent;
+  background: transparent;
+  color: #202020;
+
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-name-button span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-name-button:hover {
+  border-color: #202020;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.project-name-button:focus-visible {
+  outline: 3px solid #202020;
+  outline-offset: 3px;
+}
+
+.project-name-edit-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.project-name-input {
+  width: 100%;
+  min-width: 180px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+
+  border: 3px solid #202020;
+  border-radius: 0;
+  outline: none;
+
+  background: #fffafa;
+  color: #202020;
+
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 900;
+
+  box-shadow: 4px 4px 0 #202020;
+}
+
+.project-name-input:focus {
+  background: #fff;
 }
