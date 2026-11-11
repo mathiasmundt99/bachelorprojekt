@@ -1,7 +1,12 @@
-import { useState } from "react";
-import dmcColors from "../../data/dmc-colors.json";
+import { useEffect, useState } from "react";
 
 import type { CustomPalette } from "../../types/palette";
+
+import {
+  getAllDMCColors,
+  createColorPalette,
+  type DMCColor,
+} from "../../services/colorPaletteService";
 
 import "../../styles/modals/NewProject.css";
 import "../../styles/modals/CreatePalette.css";
@@ -15,7 +20,29 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
   const [paletteName, setPaletteName] = useState("My new palette");
   const [search, setSearch] = useState("");
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [dmcColors, setDmcColors] = useState<DMCColor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
+  // Fetch DMC colors from Supabase
+  useEffect(() => {
+    async function loadColors() {
+      try {
+        const colors = await getAllDMCColors();
+        setDmcColors(colors);
+      } catch (err) {
+        console.error("Error loading DMC colors:", err);
+        setError("Could not load DMC colors.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadColors();
+  }, []);
+
+  // Filter colors
   const filteredColors = dmcColors.filter((color) => {
     const query = search.toLowerCase().trim();
 
@@ -25,6 +52,7 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
     );
   });
 
+  // Toggle selected colors
   const toggleColor = (code: string) => {
     setSelectedCodes((previous) =>
       previous.includes(code)
@@ -37,29 +65,48 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
     selectedCodes.includes(color.code),
   );
 
-  const handleSave = () => {
-    if (!paletteName.trim() || selectedCodes.length === 0) {
+  // Save palette to Supabase
+  const handleSave = async () => {
+    if (!paletteName.trim() || selectedCodes.length === 0 || saving) {
       return;
     }
 
-    onSave({
-      id: crypto.randomUUID(),
-      name: paletteName.trim(),
-      colorCodes: selectedCodes,
-    });
+    setSaving(true);
+    setError("");
+
+    try {
+      const palette = await createColorPalette(
+        paletteName.trim(),
+        selectedCodes,
+      );
+
+      onSave({
+        id: String(palette.palette_id),
+        name: palette.name,
+        colorCodes: selectedCodes,
+      });
+    } catch (err) {
+      console.error("Error creating palette:", err);
+      setError("Could not save palette. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
+
   return (
     <div className="new-project-overlay">
       <div
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="create-palette-title">
+        aria-labelledby="create-palette-title"
+      >
         <header className="new-project-header">
           <button
             type="button"
             className="create-palette-back"
-            onClick={onBack}>
+            onClick={onBack}
+          >
             ← Pattern setup
           </button>
 
@@ -71,7 +118,8 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
             type="button"
             className="new-project-close"
             onClick={onBack}
-            aria-label="Back to pattern setup">
+            aria-label="Back to pattern setup"
+          >
             ×
           </button>
         </header>
@@ -114,46 +162,54 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
           </div>
 
           <div className="create-palette-color-grid">
-            {filteredColors.map((color) => {
-              const isSelected = selectedCodes.includes(color.code);
+            {loading ? (
+              <p>Loading DMC colors...</p>
+            ) : (
+              filteredColors.map((color) => {
+                const isSelected = selectedCodes.includes(color.code);
 
-              return (
-                <button
-                  key={color.code}
-                  type="button"
-                  className={`create-palette-color-card ${
-                    isSelected ? "selected" : ""
-                  }`}
-                  onClick={() => toggleColor(color.code)}
-                  aria-pressed={isSelected}>
-                  <span
-                    className="create-palette-color-swatch"
-                    style={{ backgroundColor: color.hex }}>
-                    {isSelected && (
-                      <span className="material-symbols-sharp">check</span>
-                    )}
-                  </span>
-
-                  <span className="create-palette-color-info">
-                    <strong>DMC {color.code}</strong>
-                    <span>{color.name}</span>
-                  </span>
-
-                  <span className="create-palette-color-action">
-                    <span className="material-symbols-sharp">
-                      {isSelected ? "check" : "add"}
+                return (
+                  <button
+                    key={color.code}
+                    type="button"
+                    className={`create-palette-color-card ${
+                      isSelected ? "selected" : ""
+                    }`}
+                    onClick={() => toggleColor(color.code)}
+                    aria-pressed={isSelected}
+                  >
+                    <span
+                      className="create-palette-color-swatch"
+                      style={{ backgroundColor: color.hex }}
+                    >
+                      {isSelected && (
+                        <span className="material-symbols-sharp">check</span>
+                      )}
                     </span>
-                  </span>
-                </button>
-              );
-            })}
+
+                    <span className="create-palette-color-info">
+                      <strong>DMC {color.code}</strong>
+                      <span>{color.name}</span>
+                    </span>
+
+                    <span className="create-palette-color-action">
+                      <span className="material-symbols-sharp">
+                        {isSelected ? "check" : "add"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })
+            )}
           </div>
 
-          {filteredColors.length === 0 && (
+          {!loading && filteredColors.length === 0 && (
             <p className="create-palette-empty">
               No colors found. Try another search.
             </p>
           )}
+
+          {error && <p className="create-palette-empty">{error}</p>}
         </div>
 
         <footer className="new-project-footer create-palette-footer">
@@ -188,7 +244,8 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
             <button
               type="button"
               className="new-project-cancel"
-              onClick={onBack}>
+              onClick={onBack}
+            >
               CANCEL
             </button>
 
@@ -196,8 +253,14 @@ function CreatePaletteModal({ onBack, onSave }: CreatePaletteModalProps) {
               type="button"
               className="new-project-create"
               onClick={handleSave}
-              disabled={!paletteName.trim() || selectedCodes.length === 0}>
-              SAVE PALETTE
+              disabled={
+                !paletteName.trim() ||
+                selectedCodes.length === 0 ||
+                saving ||
+                loading
+              }
+            >
+              {saving ? "SAVING..." : "SAVE PALETTE"}
             </button>
           </div>
         </footer>
