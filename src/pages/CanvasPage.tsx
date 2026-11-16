@@ -9,7 +9,7 @@ import SwapToolPanel from "../components/canvas/SwapToolPanel";
 import { usePatternHistory } from "../hooks/usePatternHistory";
 import { swapColors } from "../utils/canvas/swapColors";
 
-import type { Pattern, Tool } from "../types/pattern";
+import type { Pattern, Tool, HalfStitchDirection } from "../types/pattern";
 
 import "../styles/CanvasPage.css";
 
@@ -74,6 +74,8 @@ function CanvasPage() {
   // TOOLS
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
   const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedHalfStitchDirection, setSelectedHalfStitchDirection] =
+    useState<HalfStitchDirection>("top-left");
 
   // PATTERN HISTORY
   const initialPatternRef = useRef<Pattern>(
@@ -204,6 +206,8 @@ function CanvasPage() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+            selectedHalfStitchDirection={selectedHalfStitchDirection}
+            onHalfStitchDirectionChange={setSelectedHalfStitchDirection}
           />
         </aside>
 
