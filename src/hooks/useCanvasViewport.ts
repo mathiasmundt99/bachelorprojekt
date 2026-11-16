@@ -7,6 +7,7 @@ import type { Viewport } from "../utils/canvas/drawPattern";
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 8;
 const CANVAS_MARGIN = 150;
+const FIT_PADDING = 40;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -80,12 +81,11 @@ export function useCanvasViewport(
   });
 
   // ========================================
-  // OBSERVE CANVAS SIZE
+  // OBSERVE CONTAINER SIZE
   // ========================================
 
   useEffect(() => {
     const container = containerRef.current;
-
     if (!container) return;
 
     const observer = new ResizeObserver((entries) => {
@@ -107,7 +107,7 @@ export function useCanvasViewport(
   // ========================================
 
   useEffect(() => {
-    if (canvasSize.width === 0 || canvasSize.height === 0) {
+    if (canvasSize.width <= 0 || canvasSize.height <= 0) {
       return;
     }
 
@@ -132,7 +132,7 @@ export function useCanvasViewport(
   }, [patternWidth, patternHeight, canvasSize.width, canvasSize.height]);
 
   // ========================================
-  // START PANNING
+  // START PAN
   // ========================================
 
   const startPan = useCallback(
@@ -180,7 +180,7 @@ export function useCanvasViewport(
   );
 
   // ========================================
-  // STOP PANNING
+  // STOP PAN
   // ========================================
 
   const stopPan = useCallback(() => {
@@ -188,18 +188,137 @@ export function useCanvasViewport(
   }, []);
 
   // ========================================
-  // TRACKPAD PAN AND ZOOM
+  // ZOOM AT POSITION
+  // ========================================
+
+  const zoomAt = useCallback(
+    (nextZoom: number, screenX?: number, screenY?: number) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const centerX = screenX ?? container.clientWidth / 2;
+      const centerY = screenY ?? container.clientHeight / 2;
+
+      setViewport((current) => {
+        const newZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+
+        const patternX = (centerX - current.offsetX) / current.zoom;
+
+        const patternY = (centerY - current.offsetY) / current.zoom;
+
+        return clampViewport(
+          {
+            zoom: newZoom,
+            offsetX: centerX - patternX * newZoom,
+            offsetY: centerY - patternY * newZoom,
+          },
+          patternWidth,
+          patternHeight,
+          container.clientWidth,
+          container.clientHeight,
+        );
+      });
+    },
+    [containerRef, patternWidth, patternHeight],
+  );
+
+  // ========================================
+  // ZOOM BUTTONS
+  // ========================================
+
+  const zoomIn = useCallback(() => {
+    zoomAt(viewport.zoom * 1.25);
+  }, [viewport.zoom, zoomAt]);
+
+  const zoomOut = useCallback(() => {
+    zoomAt(viewport.zoom / 1.25);
+  }, [viewport.zoom, zoomAt]);
+
+  const resetZoom = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const patternPixelWidth = patternWidth * CELL_SIZE;
+    const patternPixelHeight = patternHeight * CELL_SIZE;
+
+    setViewport(
+      clampViewport(
+        {
+          zoom: 1,
+          offsetX: (container.clientWidth - patternPixelWidth) / 2,
+          offsetY: (container.clientHeight - patternPixelHeight) / 2,
+        },
+        patternWidth,
+        patternHeight,
+        container.clientWidth,
+        container.clientHeight,
+      ),
+    );
+  }, [containerRef, patternWidth, patternHeight]);
+
+  // ========================================
+  // FIT TO SCREEN
+  // ========================================
+
+  const fitToScreen = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    const patternPixelWidth = patternWidth * CELL_SIZE;
+    const patternPixelHeight = patternHeight * CELL_SIZE;
+
+    if (
+      containerWidth <= 0 ||
+      containerHeight <= 0 ||
+      patternPixelWidth <= 0 ||
+      patternPixelHeight <= 0
+    ) {
+      return;
+    }
+
+    const availableWidth = Math.max(1, containerWidth - FIT_PADDING);
+
+    const availableHeight = Math.max(1, containerHeight - FIT_PADDING);
+
+    const newZoom = clamp(
+      Math.min(
+        availableWidth / patternPixelWidth,
+        availableHeight / patternPixelHeight,
+      ),
+      MIN_ZOOM,
+      MAX_ZOOM,
+    );
+
+    setViewport(
+      clampViewport(
+        {
+          zoom: newZoom,
+          offsetX: (containerWidth - patternPixelWidth * newZoom) / 2,
+          offsetY: (containerHeight - patternPixelHeight * newZoom) / 2,
+        },
+        patternWidth,
+        patternHeight,
+        containerWidth,
+        containerHeight,
+      ),
+    );
+  }, [containerRef, patternWidth, patternHeight]);
+
+  // ========================================
+  // TRACKPAD PAN / PINCH ZOOM
   // ========================================
 
   useEffect(() => {
     const canvas = canvasRef.current;
-
     if (!canvas) return;
 
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
 
-      // Trackpad-scroll = panorering
+      // Normal trackpad scroll = pan
       if (!event.ctrlKey) {
         setViewport((current) =>
           clampViewport(
@@ -218,7 +337,7 @@ export function useCanvasViewport(
         return;
       }
 
-      // Trackpad pinch = zoom
+      // Trackpad pinch / Ctrl + wheel = zoom
       const rect = canvas!.getBoundingClientRect();
 
       const cursorX = event.clientX - rect.left;
@@ -233,14 +352,11 @@ export function useCanvasViewport(
 
         const newZoom = clamp(current.zoom * zoomFactor, MIN_ZOOM, MAX_ZOOM);
 
-        const newOffsetX = cursorX - patternX * newZoom;
-        const newOffsetY = cursorY - patternY * newZoom;
-
         return clampViewport(
           {
             zoom: newZoom,
-            offsetX: newOffsetX,
-            offsetY: newOffsetY,
+            offsetX: cursorX - patternX * newZoom,
+            offsetY: cursorY - patternY * newZoom,
           },
           patternWidth,
           patternHeight,
@@ -271,5 +387,9 @@ export function useCanvasViewport(
     startPan,
     movePan,
     stopPan,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fitToScreen,
   };
 }

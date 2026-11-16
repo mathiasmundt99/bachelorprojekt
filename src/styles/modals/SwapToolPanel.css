@@ -30,11 +30,9 @@
 
 .swap-reset-button {
   padding: 5px 10px;
-
   border: 1px solid #dddddd;
   border-radius: 6px;
   background: #f7f7f7;
-
   font-size: 12px;
   cursor: pointer;
 }
@@ -61,21 +59,32 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
 }
 
-.swap-color-item span {
+.swap-color-label {
   color: #555555;
   font-size: 12px;
   font-weight: 500;
 }
 
+.swap-color-code {
+  color: #242424;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .swap-color-box {
   width: 62px;
   height: 62px;
-
   border: 2px solid #dddddd;
   border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .swap-color-box.empty {
@@ -84,7 +93,7 @@
 }
 
 .swap-arrow {
-  margin-bottom: 20px;
+  margin-bottom: 35px;
   font-size: 24px;
   color: #777777;
 }

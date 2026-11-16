@@ -32,6 +32,9 @@ const fabricColors = [
 function NewProjectModal({ onClose }: NewProjectModalProps) {
   const navigate = useNavigate();
 
+  // PROJECT NAME
+  const [projectName, setProjectName] = useState("Untitled Project");
+
   // PATTERN SIZE
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(80);
@@ -91,6 +94,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
   const handleCreatePattern = () => {
     navigate("/canvas", {
       state: {
+        projectName: projectName.trim() || "Untitled Project",
         width,
         height,
         fabricCount,
@@ -133,8 +137,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="new-project-title"
-      >
+        aria-labelledby="new-project-title">
         {/* HEADER */}
         <header className="new-project-header">
           <span className="new-project-label">NEW PROJECT</span>
@@ -143,8 +146,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             type="button"
             className="new-project-close"
             onClick={onClose}
-            aria-label="Close modal"
-          >
+            aria-label="Close modal">
             ×
           </button>
 
@@ -155,6 +157,20 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
         {/* CONTENT */}
         <div className="new-project-content">
+          {/* PROJECT NAME */}
+          <section className="new-project-name-section">
+            <label htmlFor="new-project-name">PROJECT NAME</label>
+
+            <input
+              id="new-project-name"
+              type="text"
+              value={projectName}
+              onChange={(event) => setProjectName(event.target.value)}
+              maxLength={100}
+              placeholder="Untitled Project"
+            />
+          </section>
+
           {/* 01 - PATTERN SIZE */}
           <section className="new-project-section">
             <div className="new-project-section-heading">
@@ -240,8 +256,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                     fabricCount === count ? "selected" : ""
                   }`}
                   onClick={() => setFabricCount(count)}
-                  aria-pressed={fabricCount === count}
-                >
+                  aria-pressed={fabricCount === count}>
                   <strong>{count}</strong>
                   <span>COUNT</span>
                 </button>
@@ -262,8 +277,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   onClick={() => setFabricColor(color.name)}
                   aria-label={color.name}
                   aria-pressed={fabricColor === color.name}
-                  title={color.name}
-                >
+                  title={color.name}>
                   {fabricColor === color.name && (
                     <span className="fabric-color-check">✓</span>
                   )}
@@ -301,8 +315,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                       selectedPalette === palette.id ? "selected" : ""
                     }`}
                     onClick={() => setSelectedPalette(palette.id)}
-                    aria-pressed={selectedPalette === palette.id}
-                  >
+                    aria-pressed={selectedPalette === palette.id}>
                     <span className="new-project-palette-radio">
                       {selectedPalette === palette.id && (
                         <span className="new-project-palette-radio-dot" />
@@ -332,8 +345,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             <button
               type="button"
               className="new-project-palette-add"
-              onClick={() => setIsCreatingPalette(true)}
-            >
+              onClick={() => setIsCreatingPalette(true)}>
               + Create a new palette
             </button>
           </section>
@@ -344,16 +356,14 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
           <button
             type="button"
             className="new-project-cancel"
-            onClick={onClose}
-          >
+            onClick={onClose}>
             CANCEL
           </button>
 
           <button
             type="button"
             className="new-project-create"
-            onClick={handleCreatePattern}
-          >
+            onClick={handleCreatePattern}>
             CREATE PATTERN →
           </button>
         </footer>

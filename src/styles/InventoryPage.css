@@ -1,0 +1,419 @@
+/* ========================================
+   INVENTORY PAGE
+======================================== */
+
+.inventory-page {
+  min-height: calc(100vh - 80px);
+  padding: 36px 40px 60px;
+
+  background: #f7edf8;
+  color: #202020;
+}
+
+/* ========================================
+   PAGE HEADER
+======================================== */
+
+.inventory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  margin-bottom: 30px;
+}
+
+.inventory-eyebrow {
+  margin: 0 0 12px;
+
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.inventory-header h1 {
+  margin: 0;
+
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.inventory-add-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  flex-shrink: 0;
+  min-height: 52px;
+  padding: 0 24px;
+
+  border: 3px solid #202020;
+  border-radius: 0;
+
+  background: #d7f46a;
+  color: #202020;
+
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+
+  box-shadow: 5px 5px 0 #202020;
+}
+
+.inventory-add-button span {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.inventory-add-button:hover {
+  background: #c6ed47;
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 #202020;
+}
+
+/* ========================================
+   FILTER BAR
+======================================== */
+
+.inventory-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  margin-bottom: 28px;
+  padding: 18px;
+
+  border: 3px solid #202020;
+  background: #d9b9f1;
+
+  box-shadow: 5px 5px 0 #202020;
+}
+
+/* Search */
+
+.inventory-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: min(340px, 100%);
+  min-height: 48px;
+  padding: 0 14px;
+
+  border: 3px solid #202020;
+  background: #fffafa;
+}
+
+.inventory-search-icon {
+  font-size: 27px;
+  line-height: 1;
+}
+
+.inventory-search-wrapper input {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: #202020;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Filter buttons */
+
+.inventory-filter-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inventory-filter-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 46px;
+  padding: 0 16px;
+
+  border: 2px solid #202020;
+  background: #fffafa;
+  color: #202020;
+
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inventory-filter-button.active {
+  background: #202020;
+  color: #fff;
+}
+
+.inventory-filter-button:hover:not(.active) {
+  background: #f7edf8;
+}
+
+.inventory-low-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+
+  border: 1px solid #202020;
+  background: #ffca45;
+  color: #202020;
+
+  font-size: 11px;
+}
+
+/* Sorting */
+
+.inventory-sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-left: 8px;
+}
+
+.inventory-sort-wrapper label {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.inventory-sort-wrapper select {
+  min-height: 46px;
+  padding: 0 12px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
+  color: #202020;
+
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ========================================
+   INVENTORY GRID
+======================================== */
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  align-items: start;
+  gap: 18px;
+}
+
+/* ========================================
+   INVENTORY CARD
+======================================== */
+
+.inventory-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+  min-height: 100px;
+  padding: 12px;
+
+  border: 2px solid #202020;
+  background: #fffafa;
+
+  box-shadow: 5px 5px 0 #202020;
+}
+
+.inventory-card-low {
+  background: #fff4d8;
+}
+
+/* Color square */
+
+.inventory-color-preview {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+
+  border: 2px solid #202020;
+}
+
+/* Color name */
+
+.inventory-card-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.inventory-card-info strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.inventory-card-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #666;
+  font-size: 12px;
+}
+
+/* ========================================
+   CARD CONTROLS
+======================================== */
+
+.inventory-card-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+/* Quantity */
+
+.inventory-quantity {
+  display: flex;
+  align-items: center;
+
+  height: 34px;
+  border: 2px solid #202020;
+  background: #fff;
+}
+
+.inventory-quantity button {
+  width: 30px;
+  height: 30px;
+
+  border: none;
+  background: transparent;
+
+  color: #202020;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inventory-quantity button:hover:not(:disabled) {
+  background: #d7f46a;
+}
+
+.inventory-quantity button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.inventory-quantity span {
+  min-width: 25px;
+
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Running low */
+
+.inventory-low-button {
+  padding: 4px 8px;
+
+  border: 1px solid #202020;
+  background: #fff;
+
+  color: #555;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inventory-low-button.active {
+  background: #ffca45;
+  color: #202020;
+}
+
+.inventory-low-button:hover {
+  background: #ffca45;
+}
+
+/* Remove button */
+
+.inventory-remove-button {
+  padding: 0 5px;
+
+  border: none;
+  background: transparent;
+
+  color: #777;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.inventory-remove-button:hover {
+  color: #f04f98;
+}
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+
+.inventory-empty {
+  max-width: 550px;
+  margin: 70px auto;
+  padding: 40px;
+
+  border: 3px solid #202020;
+  background: #fffafa;
+
+  text-align: center;
+  box-shadow: 6px 6px 0 #202020;
+}
+
+.inventory-empty h2 {
+  margin: 0 0 12px;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.inventory-empty p {
+  margin: 0 0 24px;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.inventory-empty-add {
+  padding: 12px 18px;
+
+  border: 2px solid #202020;
+  background: #d7f46a;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #202020;
+}

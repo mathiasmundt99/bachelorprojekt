@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Toolbar from "../components/canvas/Toolbar";
@@ -6,9 +6,10 @@ import ColorPalette from "../components/canvas/ColorPalette";
 import PatternCanvas from "../components/canvas/PatternCanvas";
 import SwapToolPanel from "../components/canvas/SwapToolPanel";
 
+import { usePatternHistory } from "../hooks/usePatternHistory";
 import { swapColors } from "../utils/canvas/swapColors";
 
-import type { Pattern, Tool } from "../types/pattern";
+import type { Pattern, Tool, HalfStitchDirection } from "../types/pattern";
 
 import "../styles/CanvasPage.css";
 
@@ -21,11 +22,13 @@ function createEmptyPattern(width: number, height: number): Pattern {
 }
 
 type ProjectSettings = {
+  projectName?: string;
   width: number;
   height: number;
   fabricCount: number;
   fabricColor: string;
   selectedPalette: string;
+  pattern?: Pattern;
 };
 
 function CanvasPage() {
@@ -37,57 +40,81 @@ function CanvasPage() {
   const width = projectSettings?.width ?? 30;
   const height = projectSettings?.height ?? 30;
 
-  const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
-  const [selectedColor, setSelectedColor] = useState("#000000");
-
-  const [pattern, setPattern] = useState<Pattern>(() =>
-    createEmptyPattern(width, height),
+  // PROJECT NAME
+  const [projectName, setProjectName] = useState(
+    () => projectSettings?.projectName?.trim() || "Untitled Project",
   );
 
-  // ========================================
-  // SWAP TOOL STATE
-  // ========================================
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [draftProjectName, setDraftProjectName] = useState(projectName);
+  const cancelNameEditRef = useRef(false);
 
+  function startEditingName() {
+    cancelNameEditRef.current = false;
+    setDraftProjectName(projectName);
+    setIsEditingName(true);
+  }
+
+  function saveProjectName() {
+    if (cancelNameEditRef.current) {
+      cancelNameEditRef.current = false;
+      return;
+    }
+
+    setProjectName(draftProjectName.trim() || "Untitled Project");
+    setIsEditingName(false);
+  }
+
+  function cancelEditingName() {
+    cancelNameEditRef.current = true;
+    setDraftProjectName(projectName);
+    setIsEditingName(false);
+  }
+
+  // TOOLS
+  const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
+  const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedHalfStitchDirection, setSelectedHalfStitchDirection] =
+    useState<HalfStitchDirection>("top-left");
+
+  // PATTERN HISTORY
+  const initialPatternRef = useRef<Pattern>(
+    projectSettings?.pattern ?? createEmptyPattern(width, height),
+  );
+
+  const {
+    pattern,
+    setPattern,
+    beginStroke,
+    endStroke,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = usePatternHistory(initialPatternRef.current);
+
+  // SWAP TOOL
   const [swapFromColor, setSwapFromColor] = useState<string | null>(null);
-
   const [swapToColor, setSwapToColor] = useState<string | null>(null);
-
-  // ========================================
-  // CHANGE TOOL
-  // ========================================
 
   function handleToolChange(tool: Tool) {
     setSelectedTool(tool);
-
-    // Start forfra, når man skifter værktøj
     setSwapFromColor(null);
     setSwapToColor(null);
   }
-
-  // ========================================
-  // SELECT COLOR FROM CANVAS
-  // ========================================
 
   function handleSwapFromColor(color: string) {
     setSwapFromColor(color);
     setSwapToColor(null);
   }
 
-  // ========================================
-  // SELECT COLOR FROM PALETTE
-  // ========================================
-
   function handlePaletteColorChange(color: string) {
-    // Normal brug af paletten
     if (selectedTool !== "swap") {
       setSelectedColor(color);
       return;
     }
 
-    // Swap kræver først en farve fra canvas
-    if (!swapFromColor) {
-      return;
-    }
+    if (!swapFromColor) return;
 
     setSwapToColor(color);
 
@@ -96,13 +123,22 @@ function CanvasPage() {
     );
   }
 
-  // ========================================
-  // RESET SWAP
-  // ========================================
-
   function handleResetSwap() {
     setSwapFromColor(null);
     setSwapToColor(null);
+  }
+
+  // FINISH PAGE
+  function handleFinish() {
+    navigate("/finish", {
+      state: {
+        ...projectSettings,
+        projectName,
+        width: pattern.width,
+        height: pattern.height,
+        pattern,
+      },
+    });
   }
 
   return (
@@ -115,14 +151,48 @@ function CanvasPage() {
           ← Back to home
         </button>
 
-        <h1>Cross Stitch Studio</h1>
+        <div className="project-name-container">
+          {isEditingName ? (
+            <input
+              autoFocus
+              className="project-name-input"
+              type="text"
+              maxLength={100}
+              value={draftProjectName}
+              onChange={(event) => setDraftProjectName(event.target.value)}
+              onFocus={(event) => event.target.select()}
+              onBlur={saveProjectName}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.currentTarget.blur();
+                }
+
+                if (event.key === "Escape") {
+                  cancelEditingName();
+                }
+              }}
+              aria-label="Project name"
+            />
+          ) : (
+            <button
+              type="button"
+              className="project-name-button"
+              onClick={startEditingName}
+              title="Rename project">
+              <span>{projectName}</span>
+              <span className="project-name-edit-icon" aria-hidden="true">
+                ✎
+              </span>
+            </button>
+          )}
+        </div>
 
         <div className="save-status">
           <span className="save-indicator" />
           <span>All changes saved</span>
         </div>
 
-        <button type="button" className="next-button">
+        <button type="button" className="next-button" onClick={handleFinish}>
           › Done / Next
         </button>
       </header>
@@ -132,6 +202,12 @@ function CanvasPage() {
           <Toolbar
             selectedTool={selectedTool}
             onToolChange={handleToolChange}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            selectedHalfStitchDirection={selectedHalfStitchDirection}
+            onHalfStitchDirectionChange={setSelectedHalfStitchDirection}
           />
         </aside>
 
@@ -144,6 +220,8 @@ function CanvasPage() {
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}
             onSwapColorSelect={handleSwapFromColor}
+            onStrokeStart={beginStroke}
+            onStrokeEnd={endStroke}
           />
 
           {selectedTool === "swap" && (

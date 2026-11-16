@@ -393,3 +393,50 @@
   font-size: 13px;
   color: #555;
 }
+
+/* ========================================
+   PROJECT NAME
+======================================== */
+
+.new-project-name-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding: 20px 24px;
+  margin-bottom: 24px;
+
+  border: 3px solid #202020;
+  background: #d9b9f1;
+  box-shadow: 5px 5px 0 #202020;
+}
+
+.new-project-name-section label {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.new-project-name-section input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  padding: 14px 16px;
+
+  border: 3px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
+  color: #202020;
+
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.new-project-name-section input:focus {
+  outline: 3px solid #f04f98;
+  outline-offset: 3px;
+}
