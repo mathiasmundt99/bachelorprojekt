@@ -1,9 +1,11 @@
 export interface Project {
-  id: number;
+  project_id: number;
+  user_id: string;
   name: string;
   width: number;
   height: number;
-  colors: number;
-  progress: number;
-  color: string;
+  fabric_count: number | null;
+  fabric_color: string | null;
+  palette_id: number | null;
+  created_at: string;
 }

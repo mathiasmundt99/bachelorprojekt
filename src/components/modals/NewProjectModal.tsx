@@ -12,6 +12,8 @@ import {
   type DMCColor,
 } from "../../services/colorPaletteService";
 
+import { createProject } from "../../services/projectService";
+
 import "../../styles/modals/NewProject.css";
 
 type NewProjectModalProps = {
@@ -50,6 +52,10 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
   const [loadingPalettes, setLoadingPalettes] = useState(true);
   const [paletteError, setPaletteError] = useState("");
+
+  // CREATE PROJECT
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [createError, setCreateError] = useState("");
 
   // CREATE PALETTE MODAL
   const [isCreatingPalette, setIsCreatingPalette] = useState(false);
@@ -90,18 +96,40 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
     setIsCreatingPalette(false);
   };
 
-  // CREATE PATTERN
-  const handleCreatePattern = () => {
-    navigate("/canvas", {
-      state: {
-        projectName: projectName.trim() || "Untitled Project",
+  // CREATE PROJECT
+  const handleCreatePattern = async () => {
+    try {
+      setIsCreatingProject(true);
+      setCreateError("");
+
+      const newProject = await createProject({
+        name: projectName.trim() || "Untitled Project",
         width,
         height,
-        fabricCount,
-        fabricColor,
-        selectedPalette,
-      },
-    });
+        fabric_count: fabricCount,
+        fabric_color: fabricColor,
+        palette_id: selectedPalette === "all" ? null : Number(selectedPalette),
+      });
+
+      navigate(`/canvas/${newProject.project_id}`, {
+        state: {
+          projectName,
+          width,
+          height,
+          fabricCount,
+          fabricColor,
+          selectedPalette,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating project:", error);
+
+      setCreateError(
+        error instanceof Error ? error.message : "Could not create project.",
+      );
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   // ALL PALETTE OPTIONS
@@ -137,7 +165,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="new-project-title">
+        aria-labelledby="new-project-title"
+      >
         {/* HEADER */}
         <header className="new-project-header">
           <span className="new-project-label">NEW PROJECT</span>
@@ -146,7 +175,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             type="button"
             className="new-project-close"
             onClick={onClose}
-            aria-label="Close modal">
+            aria-label="Close modal"
+          >
             ×
           </button>
 
@@ -256,7 +286,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                     fabricCount === count ? "selected" : ""
                   }`}
                   onClick={() => setFabricCount(count)}
-                  aria-pressed={fabricCount === count}>
+                  aria-pressed={fabricCount === count}
+                >
                   <strong>{count}</strong>
                   <span>COUNT</span>
                 </button>
@@ -277,7 +308,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   onClick={() => setFabricColor(color.name)}
                   aria-label={color.name}
                   aria-pressed={fabricColor === color.name}
-                  title={color.name}>
+                  title={color.name}
+                >
                   {fabricColor === color.name && (
                     <span className="fabric-color-check">✓</span>
                   )}
@@ -315,7 +347,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                       selectedPalette === palette.id ? "selected" : ""
                     }`}
                     onClick={() => setSelectedPalette(palette.id)}
-                    aria-pressed={selectedPalette === palette.id}>
+                    aria-pressed={selectedPalette === palette.id}
+                  >
                     <span className="new-project-palette-radio">
                       {selectedPalette === palette.id && (
                         <span className="new-project-palette-radio-dot" />
@@ -345,7 +378,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             <button
               type="button"
               className="new-project-palette-add"
-              onClick={() => setIsCreatingPalette(true)}>
+              onClick={() => setIsCreatingPalette(true)}
+            >
               + Create a new palette
             </button>
           </section>
@@ -353,18 +387,24 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
         {/* FOOTER */}
         <footer className="new-project-footer">
+          {createError && <p role="alert">{createError}</p>}
+
           <button
             type="button"
             className="new-project-cancel"
-            onClick={onClose}>
+            onClick={onClose}
+            disabled={isCreatingProject}
+          >
             CANCEL
           </button>
 
           <button
             type="button"
             className="new-project-create"
-            onClick={handleCreatePattern}>
-            CREATE PATTERN →
+            onClick={handleCreatePattern}
+            disabled={isCreatingProject}
+          >
+            {isCreatingProject ? "CREATING..." : "CREATE PATTERN →"}
           </button>
         </footer>
       </div>
