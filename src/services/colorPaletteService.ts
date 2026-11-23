@@ -1,13 +1,14 @@
-
 import { supabase } from "../lib/supabase";
 
 export interface DMCColor {
+  id: number;
   code: string;
   name: string;
   hex: string;
 }
 
 export interface PaletteColor {
+  id: number;
   code: string;
   name: string;
   hex: string;
@@ -23,12 +24,13 @@ export interface UserColorPalette {
 export const getAllDMCColors = async (): Promise<DMCColor[]> => {
   const { data, error } = await supabase
     .from("dmc_colors")
-    .select("dmc_code, color_name, hex_code")
+    .select("color_id, dmc_code, color_name, hex_code")
     .order("dmc_code");
 
   if (error) throw error;
 
   return (data ?? []).map((color) => ({
+    id: color.color_id,
     code: color.dmc_code,
     name: color.color_name,
     hex: color.hex_code,
@@ -77,7 +79,7 @@ export const getUserColorPalettes = async (): Promise<UserColorPalette[]> => {
 
   const { data: dmcColors, error: dmcError } = await supabase
     .from("dmc_colors")
-    .select("dmc_code, color_name, hex_code")
+    .select("color_id, dmc_code, color_name, hex_code")
     .in("dmc_code", dmcCodes);
 
   if (dmcError) throw dmcError;
@@ -87,13 +89,12 @@ export const getUserColorPalettes = async (): Promise<UserColorPalette[]> => {
     colors: (paletteColors ?? [])
       .filter((color) => color.palette_id === palette.palette_id)
       .map((color) => {
-        const dmc = dmcColors?.find(
-          (item) => item.dmc_code === color.dmc_code,
-        );
+        const dmc = dmcColors?.find((item) => item.dmc_code === color.dmc_code);
 
         if (!dmc) return null;
 
         return {
+          id: dmc.color_id,
           code: dmc.dmc_code,
           name: dmc.color_name,
           hex: dmc.hex_code,
@@ -128,9 +129,7 @@ export const addColorsToPalette = async (
 
   if (newColors.length === 0) return;
 
-  const { error } = await supabase
-    .from("palette_colors")
-    .insert(newColors);
+  const { error } = await supabase.from("palette_colors").insert(newColors);
 
   if (error) throw error;
 };
@@ -161,14 +160,12 @@ export const createColorPalette = async (
   if (paletteError) throw paletteError;
 
   // Add selected colors
-  const { error: colorsError } = await supabase
-    .from("palette_colors")
-    .insert(
-      colorCodes.map((code) => ({
-        palette_id: palette.palette_id,
-        dmc_code: code,
-      })),
-    );
+  const { error: colorsError } = await supabase.from("palette_colors").insert(
+    colorCodes.map((code) => ({
+      palette_id: palette.palette_id,
+      dmc_code: code,
+    })),
+  );
 
   if (colorsError) {
     await supabase

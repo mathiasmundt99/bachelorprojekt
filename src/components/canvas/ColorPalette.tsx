@@ -79,15 +79,14 @@ function ColorPalette({
       return true;
     })
     .sort((a, b) => {
-      if (sort === "hue") {
-        return 0;
+      if (sort === "id") {
+        return a.id - b.id;
       }
 
       return a.code.localeCompare(b.code, undefined, {
         numeric: true,
       });
     });
-
   return (
     <div className="color-palette">
       <div className="palette-header">
@@ -96,8 +95,7 @@ function ColorPalette({
         <select
           id="active-palette"
           value={selectedPaletteId}
-          onChange={(event) => setSelectedPaletteId(event.target.value)}
-        >
+          onChange={(event) => setSelectedPaletteId(event.target.value)}>
           <option value="all">All DMC colors</option>
 
           {palettes.map((palette) => (
@@ -115,8 +113,7 @@ function ColorPalette({
           <select
             id="color-filter"
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          >
+            onChange={(event) => setFilter(event.target.value)}>
             <option value="all">All colors</option>
             <option value="used">Used colors</option>
           </select>
@@ -128,10 +125,9 @@ function ColorPalette({
           <select
             id="color-sort"
             value={sort}
-            onChange={(event) => setSort(event.target.value)}
-          >
+            onChange={(event) => setSort(event.target.value)}>
             <option value="number">DMC number</option>
-            <option value="hue">Color hue</option>
+            <option value="id">Color hue</option>
           </select>
         </div>
       </div>
@@ -153,12 +149,10 @@ function ColorPalette({
               }
               onClick={() => onColorChange(color.hex)}
               title={`${color.code} - ${color.name}`}
-              aria-label={`Select ${color.name}, DMC ${color.code}`}
-            >
+              aria-label={`Select ${color.name}, DMC ${color.code}`}>
               <span
                 className="swatch-inner"
-                style={{ backgroundColor: color.hex }}
-              >
+                style={{ backgroundColor: color.hex }}>
                 <span className="swatch-code">{color.code}</span>
               </span>
             </button>
@@ -169,8 +163,7 @@ function ColorPalette({
               type="button"
               className="add-color-button"
               onClick={() => setIsAddColorsOpen(true)}
-              title="Add colors"
-            >
+              title="Add colors">
               +
             </button>
           )}
