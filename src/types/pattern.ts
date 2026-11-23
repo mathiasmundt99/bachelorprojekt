@@ -3,7 +3,6 @@ export type Tool =
   | "eraser"
   | "fill"
   | "eyedropper"
-  | "move"
   | "swap"
   | "half-stitch"
   | "backstitch"

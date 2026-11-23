@@ -1,5 +1,4 @@
 import dmcColors from "../../data/dmc-colors.json";
-import "../../styles/modals/SwapToolPanel.css";
 
 type SwapToolPanelProps = {
   fromColor: string | null;
@@ -35,12 +34,19 @@ function getTextColor(hex: string): string {
 
 function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
   return (
-    <div className="swap-tool-panel">
-      <div className="swap-panel-header">
-        <h3>Swap colors</h3>
+    <div className="swap-tool-panel tool-popup">
+      <div className="swap-panel-header tool-popup-header">
+        <strong>SWAP COLORS</strong>
 
-        <button type="button" className="swap-reset-button" onClick={onReset}>
-          Reset
+        <button
+          type="button"
+          className="swap-reset-button"
+          onClick={onReset}
+          title="Reset swap colors"
+          aria-label="Reset swap colors">
+          <span className="material-symbols-sharp" aria-hidden="true">
+            restart_alt
+          </span>
         </button>
       </div>
 
@@ -67,10 +73,12 @@ function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
             {getDmcCode(fromColor)}
           </div>
 
-          <span className="swap-color-label">From</span>
+          <span className="swap-color-label">FROM</span>
         </div>
 
-        <span className="swap-arrow">→</span>
+        <span className="swap-arrow" aria-hidden="true">
+          <span className="material-symbols-sharp">arrow_forward</span>
+        </span>
 
         <div className="swap-color-item">
           <div
@@ -86,7 +94,7 @@ function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
             {getDmcCode(toColor)}
           </div>
 
-          <span className="swap-color-label">To</span>
+          <span className="swap-color-label">TO</span>
         </div>
       </div>
     </div>
