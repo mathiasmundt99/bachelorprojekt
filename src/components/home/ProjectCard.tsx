@@ -3,6 +3,9 @@ import type { Project } from "../../types/project";
 
 interface Props {
   project: Project;
+  onEdit: (project: Project) => void;
+  onDuplicate: (project: Project) => void;
+  onDelete: (project: Project) => void;
 }
 
 const fabricColors: Record<string, string> = {
@@ -14,7 +17,7 @@ const fabricColors: Record<string, string> = {
   Black: "#292929",
 };
 
-function ProjectCard({ project }: Props) {
+function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const previewColor = fabricColors[project.fabric_color ?? ""] ?? "#F8D967";
@@ -22,7 +25,6 @@ function ProjectCard({ project }: Props) {
   return (
     <div className={`project-card-wrapper ${isFlipped ? "flipped" : ""}`}>
       <div className="project-card-inner">
-        {/* FRONT */}
         <article className="project-card project-card-front">
           <div
             className="project-preview"
@@ -36,12 +38,10 @@ function ProjectCard({ project }: Props) {
           <div className="project-info">
             <div>
               <h3>{project.name}</h3>
-
               <p>
                 {project.width} × {project.height} stitches ·{" "}
                 {project.fabric_count ?? "—"} count
               </p>
-
               <p>
                 {project.palette_id === null
                   ? "All thread colors"
@@ -60,7 +60,6 @@ function ProjectCard({ project }: Props) {
           </div>
         </article>
 
-        {/* BACK */}
         <article className="project-card project-card-back">
           <div className="card-back-header">
             <h3>{project.name}</h3>
@@ -76,17 +75,36 @@ function ProjectCard({ project }: Props) {
           </div>
 
           <div className="card-back-options">
-            <button type="button">
+            <button
+              type="button"
+              onClick={() => {
+                setIsFlipped(false);
+                onEdit(project);
+              }}
+            >
               <span className="material-symbols-sharp">edit</span>
               Edit project
             </button>
 
-            <button type="button">
+            <button
+              type="button"
+              onClick={() => {
+                setIsFlipped(false);
+                onDuplicate(project);
+              }}
+            >
               <span className="material-symbols-sharp">content_copy</span>
               Duplicate project
             </button>
 
-            <button type="button" className="delete-option">
+            <button
+              type="button"
+              className="delete-option"
+              onClick={() => {
+                setIsFlipped(false);
+                onDelete(project);
+              }}
+            >
               <span className="material-symbols-sharp">delete</span>
               Delete project
             </button>
