@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import CreatePaletteModal from "./CreatePaletteModal";
 
 import type { CustomPalette } from "../../types/palette";
+import type { Project } from "../../types/project";
 
 import {
   getUserColorPalettes,
@@ -12,11 +13,15 @@ import {
   type DMCColor,
 } from "../../services/colorPaletteService";
 
+import { createProject, updateProject } from "../../services/projectService";
+
 import "../../styles/modals/NewProject.css";
 
-type NewProjectModalProps = {
+interface NewProjectModalProps {
   onClose: () => void;
-};
+  project?: Project;
+  onProjectUpdated?: (project: Project) => void;
+}
 
 const fabricCounts = [11, 14, 16, 18];
 
@@ -29,27 +34,45 @@ const fabricColors = [
   { name: "Black", hex: "#292929" },
 ];
 
-function NewProjectModal({ onClose }: NewProjectModalProps) {
+function NewProjectModal({
+  onClose,
+  project,
+  onProjectUpdated,
+}: NewProjectModalProps) {
   const navigate = useNavigate();
 
+  const isEditing = Boolean(project);
+
   // PROJECT NAME
-  const [projectName, setProjectName] = useState("Untitled Project");
+  const [projectName, setProjectName] = useState(
+    project?.name ?? "Untitled Project",
+  );
 
   // PATTERN SIZE
-  const [width, setWidth] = useState(100);
-  const [height, setHeight] = useState(80);
+  const [width, setWidth] = useState(project?.width ?? 100);
+  const [height, setHeight] = useState(project?.height ?? 80);
 
   // FABRIC
-  const [fabricCount, setFabricCount] = useState(14);
-  const [fabricColor, setFabricColor] = useState("Antique White");
+  const [fabricCount, setFabricCount] = useState(project?.fabric_count ?? 14);
+
+  const [fabricColor, setFabricColor] = useState(
+    project?.fabric_color ?? "Antique White",
+  );
 
   // COLOR PALETTE
-  const [selectedPalette, setSelectedPalette] = useState("all");
+  const [selectedPalette, setSelectedPalette] = useState(
+    project?.palette_id == null ? "all" : String(project.palette_id),
+  );
+
   const [customPalettes, setCustomPalettes] = useState<UserColorPalette[]>([]);
   const [allColors, setAllColors] = useState<DMCColor[]>([]);
 
   const [loadingPalettes, setLoadingPalettes] = useState(true);
   const [paletteError, setPaletteError] = useState("");
+
+  // PROJECT
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [createError, setCreateError] = useState("");
 
   // CREATE PALETTE MODAL
   const [isCreatingPalette, setIsCreatingPalette] = useState(false);
@@ -86,22 +109,60 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
   const handlePaletteSave = async (palette: CustomPalette) => {
     await loadPalettes();
 
-    setSelectedPalette(palette.id);
+    setSelectedPalette(String(palette.id));
     setIsCreatingPalette(false);
   };
 
-  // CREATE PATTERN
-  const handleCreatePattern = () => {
-    navigate("/canvas", {
-      state: {
-        projectName: projectName.trim() || "Untitled Project",
+  // CREATE OR UPDATE PROJECT
+  const handleCreatePattern = async () => {
+    try {
+      setIsCreatingProject(true);
+      setCreateError("");
+
+      const projectData = {
+        name: projectName.trim() || "Untitled Project",
         width,
         height,
-        fabricCount,
-        fabricColor,
-        selectedPalette,
-      },
-    });
+        fabric_count: fabricCount,
+        fabric_color: fabricColor,
+        palette_id: selectedPalette === "all" ? null : Number(selectedPalette),
+      };
+
+      // UPDATE EXISTING PROJECT
+      if (project) {
+        const updatedProject = await updateProject(
+          project.project_id,
+          projectData,
+        );
+
+        onProjectUpdated?.(updatedProject as Project);
+        onClose();
+
+        return;
+      }
+
+      // CREATE NEW PROJECT
+      const newProject = await createProject(projectData);
+
+      navigate(`/canvas/${newProject.project_id}`, {
+        state: {
+          projectName,
+          width,
+          height,
+          fabricCount,
+          fabricColor,
+          selectedPalette,
+        },
+      });
+    } catch (error) {
+      console.error("Error saving project:", error);
+
+      setCreateError(
+        error instanceof Error ? error.message : "Could not save project.",
+      );
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   // ALL PALETTE OPTIONS
@@ -137,20 +198,26 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="new-project-title">
+        aria-labelledby="new-project-title"
+      >
         {/* HEADER */}
         <header className="new-project-header">
-          <span className="new-project-label">NEW PROJECT</span>
+          <span className="new-project-label">
+            {isEditing ? "EDIT PROJECT" : "NEW PROJECT"}
+          </span>
 
           <button
             type="button"
             className="new-project-close"
             onClick={onClose}
-            aria-label="Close modal">
+            aria-label="Close modal"
+          >
             ×
           </button>
 
-          <h2 id="new-project-title">Set up your pattern</h2>
+          <h2 id="new-project-title">
+            {isEditing ? "Edit your pattern" : "Set up your pattern"}
+          </h2>
 
           <p>You can change these details later.</p>
         </header>
@@ -179,7 +246,7 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             </div>
 
             <p className="new-project-section-description">
-              Choose the dimensions of your new pattern.
+              Choose the dimensions of your pattern.
             </p>
 
             <div className="pattern-size-fields">
@@ -256,7 +323,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                     fabricCount === count ? "selected" : ""
                   }`}
                   onClick={() => setFabricCount(count)}
-                  aria-pressed={fabricCount === count}>
+                  aria-pressed={fabricCount === count}
+                >
                   <strong>{count}</strong>
                   <span>COUNT</span>
                 </button>
@@ -277,7 +345,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                   onClick={() => setFabricColor(color.name)}
                   aria-label={color.name}
                   aria-pressed={fabricColor === color.name}
-                  title={color.name}>
+                  title={color.name}
+                >
                   {fabricColor === color.name && (
                     <span className="fabric-color-check">✓</span>
                   )}
@@ -315,7 +384,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
                       selectedPalette === palette.id ? "selected" : ""
                     }`}
                     onClick={() => setSelectedPalette(palette.id)}
-                    aria-pressed={selectedPalette === palette.id}>
+                    aria-pressed={selectedPalette === palette.id}
+                  >
                     <span className="new-project-palette-radio">
                       {selectedPalette === palette.id && (
                         <span className="new-project-palette-radio-dot" />
@@ -345,7 +415,8 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
             <button
               type="button"
               className="new-project-palette-add"
-              onClick={() => setIsCreatingPalette(true)}>
+              onClick={() => setIsCreatingPalette(true)}
+            >
               + Create a new palette
             </button>
           </section>
@@ -353,18 +424,30 @@ function NewProjectModal({ onClose }: NewProjectModalProps) {
 
         {/* FOOTER */}
         <footer className="new-project-footer">
+          {createError && <p role="alert">{createError}</p>}
+
           <button
             type="button"
             className="new-project-cancel"
-            onClick={onClose}>
+            onClick={onClose}
+            disabled={isCreatingProject}
+          >
             CANCEL
           </button>
 
           <button
             type="button"
             className="new-project-create"
-            onClick={handleCreatePattern}>
-            CREATE PATTERN →
+            onClick={handleCreatePattern}
+            disabled={isCreatingProject}
+          >
+            {isCreatingProject
+              ? isEditing
+                ? "SAVING..."
+                : "CREATING..."
+              : isEditing
+                ? "SAVE CHANGES →"
+                : "CREATE PATTERN →"}
           </button>
         </footer>
       </div>

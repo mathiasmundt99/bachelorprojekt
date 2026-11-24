@@ -41,10 +41,10 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  text-decoration: none;
   color: #171717;
-  font-weight: 800;
   font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .logo-icon {
@@ -70,10 +70,10 @@ button {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  text-decoration: none;
   color: #171717;
   font-size: 12px;
   font-weight: 600;
+  text-decoration: none;
   border-bottom: 2px solid transparent;
 }
 
@@ -106,8 +106,8 @@ button {
   display: block;
   font-family: monospace;
   font-size: 10px;
-  letter-spacing: 1px;
   font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .page-header h1 {
@@ -120,9 +120,9 @@ button {
   width: 290px;
   height: 39px;
   padding: 0 14px;
+  background: #fffdf9;
   border: 1px solid #171717;
   box-shadow: 3px 3px #171717;
-  background: #fffdf9;
   font-size: 12px;
   outline: none;
 }
@@ -164,13 +164,17 @@ button {
 .create-icon {
   width: 50px;
   height: 50px;
+  margin-bottom: 18px;
   background: #d3ef69;
   border: 1px solid #171717;
   box-shadow: 3px 3px #171717;
   display: grid;
   place-items: center;
   font-size: 32px;
-  margin-bottom: 18px;
+}
+
+.create-icon .material-symbols-sharp {
+  font-size: 32px;
 }
 
 .create-project-card h3 {
@@ -185,39 +189,84 @@ button {
 }
 
 /* =========================
-   PROJECT CARD
+   PROJECT FLIP CARD
 ========================= */
 
+.project-card-wrapper {
+  min-width: 0;
+  min-height: 268px;
+  perspective: 1000px;
+  transition: transform 0.2s ease;
+}
+
+.project-card-wrapper:hover {
+  transform: translateY(-4px);
+}
+
+.project-card-inner {
+  position: relative;
+  width: 100%;
+  height: 268px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.project-card-wrapper.flipped .project-card-inner {
+  transform: rotateY(180deg);
+}
+
 .project-card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   min-width: 0;
   background: #fffdf9;
   border: 1px solid #171717;
   box-shadow: 4px 4px #171717;
   display: flex;
   flex-direction: column;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: box-shadow 0.2s ease;
 }
 
-.project-preview {
-  height: 198px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  border-bottom: 1px solid #171717;
+.project-card:hover {
+  box-shadow: 6px 8px #171717;
+}
+
+.project-card-front {
+  transform: rotateY(0deg);
+}
+
+.project-card-back {
+  transform: rotateY(180deg);
   padding: 18px;
 }
 
+/* =========================
+   PROJECT PREVIEW
+========================= */
+
+.project-preview {
+  position: relative;
+  height: 198px;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid #171717;
+}
+
 .canvas-preview {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
   display: grid;
   place-items: center;
   background-color: rgba(255, 255, 255, 0.5);
-
   background-image:
     linear-gradient(rgba(23, 23, 23, 0.12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(23, 23, 23, 0.12) 1px, transparent 1px);
-
   background-size: 10px 10px;
   border: 1px solid rgba(23, 23, 23, 0.3);
 }
@@ -239,12 +288,16 @@ button {
   position: absolute;
   right: 8px;
   bottom: 8px;
+  padding: 4px 7px;
   background: #fffdf9;
   border: 1px solid #171717;
-  padding: 4px 7px;
   font-family: monospace;
   font-size: 10px;
 }
+
+/* =========================
+   PROJECT INFO
+========================= */
 
 .project-info {
   min-height: 68px;
@@ -277,6 +330,61 @@ button {
 
 .more-button:hover {
   background: #f8d967;
+}
+
+/* =========================
+   FLIP CARD BACK
+========================= */
+
+.card-back-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #171717;
+}
+
+.card-back-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.card-back-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.card-back-options button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.card-back-options button:hover {
+  background: #f0eaf2;
+  border-color: #171717;
+}
+
+.card-back-options .delete-option {
+  color: #dc2626;
+}
+
+.card-back-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+  color: #8a789c;
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
 }
 
 /* =========================
@@ -359,8 +467,8 @@ button {
 }
 
 .reminder-card h2 {
-  margin: 26px 0 0;
   max-width: 350px;
+  margin: 26px 0 0;
   font-size: 20px;
   line-height: 1.3;
   letter-spacing: -0.5px;
@@ -368,8 +476,8 @@ button {
 
 .reminder-decoration {
   position: absolute;
-  bottom: 12px;
   right: 10px;
+  bottom: 12px;
   color: #f8d967;
   font-size: 23px;
   transform: rotate(-10deg);
@@ -386,10 +494,7 @@ button {
 }
 
 @media (max-width: 900px) {
-  .projects-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
+  .projects-grid,
   .dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -410,8 +515,8 @@ button {
   }
 
   .navbar nav a {
-    font-size: 10px;
     padding: 0 4px;
+    font-size: 10px;
   }
 
   .home-container {
@@ -437,22 +542,4 @@ button {
   .reminder-card {
     grid-column: auto;
   }
-}
-
-.project-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 6px 8px #171717;
-}
-
-.create-icon {
-  display: grid;
-  place-items: center;
-}
-
-.create-icon .material-symbols-sharp {
-  font-size: 32px;
 }
