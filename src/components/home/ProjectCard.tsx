@@ -131,10 +131,6 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               Delete project
             </button>
           </div>
-
-          <div className="card-back-footer">
-            <span>PROJECT OPTIONS</span>
-          </div>
         </article>
       </div>
     </div>
