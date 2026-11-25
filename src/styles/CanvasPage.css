@@ -906,3 +906,34 @@
   outline: 3px solid #7254c7;
   outline-offset: 4px;
 }
+
+.swap-reset-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: #f04f98;
+  color: #202020;
+  border: 2px solid #202020;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #202020;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.swap-reset-button:hover:not(:disabled) {
+  background: #d7f46a;
+}
+
+.swap-reset-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.swap-reset-button .material-symbols-sharp {
+  font-size: 20px;
+}

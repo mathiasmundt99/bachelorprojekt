@@ -7,12 +7,7 @@ export interface DMCColor {
   hex: string;
 }
 
-export interface PaletteColor {
-  id: number;
-  code: string;
-  name: string;
-  hex: string;
-}
+export type PaletteColor = DMCColor;
 
 export interface UserColorPalette {
   palette_id: number;
@@ -20,7 +15,8 @@ export interface UserColorPalette {
   colors: PaletteColor[];
 }
 
-// Fetch all DMC colors
+// FETCH ALL DMC COLORS
+
 export const getAllDMCColors = async (): Promise<DMCColor[]> => {
   const { data, error } = await supabase
     .from("dmc_colors")
@@ -37,8 +33,11 @@ export const getAllDMCColors = async (): Promise<DMCColor[]> => {
   }));
 };
 
-// Fetch user's color palettes
-export const getUserColorPalettes = async (): Promise<UserColorPalette[]> => {
+// FETCH USER COLOR PALETTES
+
+export const getUserColorPalettes = async (
+  allColors?: DMCColor[],
+): Promise<UserColorPalette[]> => {
   const {
     data: { user },
     error: userError,
@@ -66,45 +65,32 @@ export const getUserColorPalettes = async (): Promise<UserColorPalette[]> => {
 
   if (colorsError) throw colorsError;
 
-  const dmcCodes = [
-    ...new Set((paletteColors ?? []).map((color) => color.dmc_code)),
-  ];
-
-  if (!dmcCodes.length) {
+  if (!paletteColors?.length) {
     return palettes.map((palette) => ({
       ...palette,
       colors: [],
     }));
   }
 
-  const { data: dmcColors, error: dmcError } = await supabase
-    .from("dmc_colors")
-    .select("color_id, dmc_code, color_name, hex_code")
-    .in("dmc_code", dmcCodes);
+  const dmcColors = allColors ?? (await getAllDMCColors());
 
-  if (dmcError) throw dmcError;
+  const colorsByCode = new Map(dmcColors.map((color) => [color.code, color]));
 
   return palettes.map((palette) => ({
     ...palette,
-    colors: (paletteColors ?? [])
+
+    colors: paletteColors
       .filter((color) => color.palette_id === palette.palette_id)
-      .map((color) => {
-        const dmc = dmcColors?.find((item) => item.dmc_code === color.dmc_code);
+      .flatMap((color): PaletteColor[] => {
+        const dmc = colorsByCode.get(color.dmc_code);
 
-        if (!dmc) return null;
-
-        return {
-          id: dmc.color_id,
-          code: dmc.dmc_code,
-          name: dmc.color_name,
-          hex: dmc.hex_code,
-        };
-      })
-      .filter((color): color is PaletteColor => color !== null),
+        return dmc ? [dmc] : [];
+      }),
   }));
 };
 
-// Add colors to a palette
+// ADD COLORS TO PALETTE
+
 export const addColorsToPalette = async (
   paletteId: number,
   colorCodes: string[],
@@ -120,7 +106,7 @@ export const addColorsToPalette = async (
     (existing ?? []).map((color) => color.dmc_code),
   );
 
-  const newColors = colorCodes
+  const newColors = [...new Set(colorCodes)]
     .filter((code) => !existingCodes.has(code))
     .map((code) => ({
       palette_id: paletteId,
@@ -134,7 +120,8 @@ export const addColorsToPalette = async (
   if (error) throw error;
 };
 
-// Create a new color palette
+// CREATE COLOR PALETTE
+
 export const createColorPalette = async (
   name: string,
   colorCodes: string[],
@@ -147,7 +134,6 @@ export const createColorPalette = async (
   if (userError) throw userError;
   if (!user) throw new Error("User not authenticated");
 
-  // Create palette
   const { data: palette, error: paletteError } = await supabase
     .from("color_palettes")
     .insert({
@@ -159,9 +145,12 @@ export const createColorPalette = async (
 
   if (paletteError) throw paletteError;
 
-  // Add selected colors
+  if (colorCodes.length === 0) {
+    return palette;
+  }
+
   const { error: colorsError } = await supabase.from("palette_colors").insert(
-    colorCodes.map((code) => ({
+    [...new Set(colorCodes)].map((code) => ({
       palette_id: palette.palette_id,
       dmc_code: code,
     })),

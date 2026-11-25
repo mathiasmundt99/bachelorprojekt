@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import type { Project } from "../../types/project";
 
 interface Props {
@@ -18,30 +20,54 @@ const fabricColors: Record<string, string> = {
 };
 
 function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
+  const navigate = useNavigate();
+
   const [isFlipped, setIsFlipped] = useState(false);
 
   const previewColor = fabricColors[project.fabric_color ?? ""] ?? "#F8D967";
 
+  // OPEN PROJECT
+  function handleOpenProject() {
+    navigate(`/canvas/${project.project_id}`, {
+      state: {
+        projectName: project.name,
+        width: project.width,
+        height: project.height,
+        fabricCount: project.fabric_count ?? 14,
+        fabricColor: project.fabric_color ?? "Antique White",
+        selectedPalette:
+          project.palette_id === null ? "all" : String(project.palette_id),
+      },
+    });
+  }
+
   return (
     <div className={`project-card-wrapper ${isFlipped ? "flipped" : ""}`}>
       <div className="project-card-inner">
+        {/* FRONT */}
         <article className="project-card project-card-front">
-          <div
+          <button
+            type="button"
             className="project-preview"
             style={{ backgroundColor: previewColor }}
-          >
+            onClick={handleOpenProject}
+            disabled={isFlipped}
+            aria-label={`Open ${project.name}`}
+            title={`Open ${project.name}`}>
             <div className="canvas-preview">
               <div className="stitch-symbol">✳</div>
             </div>
-          </div>
+          </button>
 
           <div className="project-info">
             <div>
               <h3>{project.name}</h3>
+
               <p>
                 {project.width} × {project.height} stitches ·{" "}
                 {project.fabric_count ?? "—"} count
               </p>
+
               <p>
                 {project.palette_id === null
                   ? "All thread colors"
@@ -53,13 +79,13 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               type="button"
               className="more-button"
               aria-label="Project options"
-              onClick={() => setIsFlipped(true)}
-            >
+              onClick={() => setIsFlipped(true)}>
               <span className="material-symbols-sharp">more_horiz</span>
             </button>
           </div>
         </article>
 
+        {/* BACK */}
         <article className="project-card project-card-back">
           <div className="card-back-header">
             <h3>{project.name}</h3>
@@ -68,8 +94,7 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               type="button"
               className="more-button"
               aria-label="Close options"
-              onClick={() => setIsFlipped(false)}
-            >
+              onClick={() => setIsFlipped(false)}>
               <span className="material-symbols-sharp">close</span>
             </button>
           </div>
@@ -80,8 +105,7 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               onClick={() => {
                 setIsFlipped(false);
                 onEdit(project);
-              }}
-            >
+              }}>
               <span className="material-symbols-sharp">edit</span>
               Edit project
             </button>
@@ -91,8 +115,7 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               onClick={() => {
                 setIsFlipped(false);
                 onDuplicate(project);
-              }}
-            >
+              }}>
               <span className="material-symbols-sharp">content_copy</span>
               Duplicate project
             </button>
@@ -103,8 +126,7 @@ function ProjectCard({ project, onEdit, onDuplicate, onDelete }: Props) {
               onClick={() => {
                 setIsFlipped(false);
                 onDelete(project);
-              }}
-            >
+              }}>
               <span className="material-symbols-sharp">delete</span>
               Delete project
             </button>

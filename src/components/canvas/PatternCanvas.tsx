@@ -10,6 +10,7 @@ import type {
 
 import { useCanvasViewport } from "../../hooks/useCanvasViewport";
 import { floodFill } from "../../utils/canvas/floodFill";
+
 import {
   drawPattern,
   CELL_SIZE,
@@ -23,6 +24,7 @@ type Point = {
 
 type PatternCanvasProps = {
   pattern: Pattern;
+  dmcCodeByHex: ReadonlyMap<string, string>;
   selectedTool: Tool;
   selectedColor: string;
   selectedHalfStitchDirection: HalfStitchDirection;
@@ -39,6 +41,7 @@ function PatternCanvas({
   selectedTool,
   selectedColor,
   selectedHalfStitchDirection,
+  dmcCodeByHex,
   onPatternChange,
   onColorChange,
   onToolChange,
@@ -53,8 +56,11 @@ function PatternCanvas({
     useCanvasViewport(canvasRef, containerRef, pattern.width, pattern.height);
 
   const isPaintingRef = useRef(false);
+
   const lastPaintedCellRef = useRef<Point | null>(null);
+
   const backstitchStartRef = useRef<Point | null>(null);
+
   const [backstitchPreview, setBackstitchPreview] =
     useState<BackstitchPreview | null>(null);
 
@@ -73,8 +79,10 @@ function PatternCanvas({
       viewport,
       width: canvasSize.width,
       height: canvasSize.height,
+      dmcCodeByHex,
+      backstitchPreview,
     });
-  }, [pattern, viewport, canvasSize]);
+  }, [pattern, viewport, canvasSize, dmcCodeByHex, backstitchPreview]);
 
   // ========================================
   // RESET BACKSTITCH
@@ -82,12 +90,14 @@ function PatternCanvas({
 
   useEffect(() => {
     backstitchStartRef.current = null;
+    setBackstitchPreview(null);
   }, [selectedTool]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         backstitchStartRef.current = null;
+        setBackstitchPreview(null);
       }
     }
 
@@ -97,6 +107,21 @@ function PatternCanvas({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  // ========================================
+  // UPDATE BACKSTITCH PREVIEW COLOR
+  // ========================================
+
+  useEffect(() => {
+    setBackstitchPreview((current) => {
+      if (!current) return null;
+
+      return {
+        ...current,
+        color: selectedColor,
+      };
+    });
+  }, [selectedColor]);
 
   // ========================================
   // GET POINTER POSITION
@@ -191,12 +216,13 @@ function PatternCanvas({
   }
 
   // ========================================
-  // FIND BACKSTITCH
+  // DISTANCE TO BACKSTITCH
   // ========================================
 
   function distanceToBackstitch(position: Point, stitch: Backstitch): number {
     const startX = stitch.startX * CELL_SIZE;
     const startY = stitch.startY * CELL_SIZE;
+
     const endX = stitch.endX * CELL_SIZE;
     const endY = stitch.endY * CELL_SIZE;
 
@@ -223,6 +249,10 @@ function PatternCanvas({
 
     return Math.hypot(position.x - closestX, position.y - closestY);
   }
+
+  // ========================================
+  // FIND BACKSTITCH
+  // ========================================
 
   function findBackstitch(currentPattern: Pattern, position: Point) {
     return [...(currentPattern.backstitches ?? [])]
@@ -281,6 +311,7 @@ function PatternCanvas({
 
     onPatternChange((currentPattern) => {
       // HALF STITCH
+
       if (selectedTool === "half-stitch") {
         const halfStitches = currentPattern.halfStitches ?? [];
 
@@ -297,6 +328,7 @@ function PatternCanvas({
 
         return {
           ...currentPattern,
+
           halfStitches: [
             ...halfStitches.filter(
               (stitch) =>
@@ -317,6 +349,7 @@ function PatternCanvas({
       }
 
       // PENCIL
+
       if (selectedTool !== "pencil") {
         return currentPattern;
       }
@@ -363,6 +396,7 @@ function PatternCanvas({
 
       return {
         ...currentPattern,
+
         frenchKnots: [
           ...frenchKnots.filter((knot) => !(knot.x === x && knot.y === y)),
           {
@@ -381,16 +415,27 @@ function PatternCanvas({
 
   function placeBackstitch(x: number, y: number) {
     const start = backstitchStartRef.current;
+    const point = { x, y };
 
+    // FIRST POINT
     if (!start) {
-      backstitchStartRef.current = { x, y };
+      backstitchStartRef.current = point;
+
+      setBackstitchPreview({
+        start: point,
+        end: null,
+        color: selectedColor,
+      });
+
       return;
     }
 
+    // Prevent zero-length backstitches
     if (start.x === x && start.y === y) {
       return;
     }
 
+    // ADD NEW BACKSTITCH
     onPatternChange((currentPattern) => {
       const backstitches = currentPattern.backstitches ?? [];
 
@@ -425,7 +470,14 @@ function PatternCanvas({
       };
     });
 
-    backstitchStartRef.current = null;
+    // Continue from the latest point
+    backstitchStartRef.current = point;
+
+    setBackstitchPreview({
+      start: point,
+      end: null,
+      color: selectedColor,
+    });
   }
 
   // ========================================
@@ -440,11 +492,13 @@ function PatternCanvas({
 
     onPatternChange((currentPattern) => {
       // ERASE FRENCH KNOT
+
       const knot = findFrenchKnot(currentPattern, position);
 
       if (knot) {
         return {
           ...currentPattern,
+
           frenchKnots: (currentPattern.frenchKnots ?? []).filter(
             (item) => item !== knot,
           ),
@@ -452,11 +506,13 @@ function PatternCanvas({
       }
 
       // ERASE BACKSTITCH
+
       const backstitch = findBackstitch(currentPattern, position);
 
       if (backstitch) {
         return {
           ...currentPattern,
+
           backstitches: (currentPattern.backstitches ?? []).filter(
             (item) => item !== backstitch,
           ),
@@ -466,11 +522,13 @@ function PatternCanvas({
       if (!cell) return currentPattern;
 
       // ERASE HALF STITCH
+
       const halfStitch = findHalfStitch(currentPattern, position, cell);
 
       if (halfStitch) {
         return {
           ...currentPattern,
+
           halfStitches: (currentPattern.halfStitches ?? []).filter(
             (item) => item !== halfStitch,
           ),
@@ -478,6 +536,7 @@ function PatternCanvas({
       }
 
       // ERASE FULL STITCH
+
       if (currentPattern.stitches[cell.y][cell.x] === null) {
         return currentPattern;
       }
@@ -514,21 +573,31 @@ function PatternCanvas({
 
     if (!position) return null;
 
+    // FRENCH KNOT
+
     const knot = findFrenchKnot(pattern, position);
 
     if (knot) return knot.color;
+
+    // BACKSTITCH
 
     const backstitch = findBackstitch(pattern, position);
 
     if (backstitch) return backstitch.color;
 
+    // GET CELL
+
     const cell = getCellFromPointer(event);
 
     if (!cell) return null;
 
+    // HALF STITCH
+
     const halfStitch = findHalfStitch(pattern, position, cell);
 
     if (halfStitch) return halfStitch.color;
+
+    // FULL STITCH
 
     return pattern.stitches[cell.y][cell.x];
   }
@@ -568,12 +637,14 @@ function PatternCanvas({
     event.currentTarget.setPointerCapture(event.pointerId);
 
     // PAN
+
     if (event.button === 1) {
       startPan(event);
       return;
     }
 
     // BACKSTITCH
+
     if (selectedTool === "backstitch") {
       const point = getGridPointFromPointer(event);
 
@@ -585,6 +656,7 @@ function PatternCanvas({
     }
 
     // FRENCH KNOT
+
     if (selectedTool === "french-knot") {
       const point = getGridPointFromPointer(event);
 
@@ -599,6 +671,7 @@ function PatternCanvas({
     }
 
     // ERASER
+
     if (selectedTool === "eraser") {
       isPaintingRef.current = true;
 
@@ -609,28 +682,34 @@ function PatternCanvas({
     }
 
     // SWAP
+
     if (selectedTool === "swap") {
       pickSwapColor(event);
       return;
     }
 
     // EYEDROPPER
+
     if (selectedTool === "eyedropper") {
       pickColor(event);
       return;
     }
+
+    // GET CELL
 
     const cell = getCellFromPointer(event);
 
     if (!cell) return;
 
     // FILL
+
     if (selectedTool === "fill") {
       fillArea(cell.x, cell.y);
       return;
     }
 
     // PENCIL AND HALF STITCH
+
     if (selectedTool === "pencil" || selectedTool === "half-stitch") {
       isPaintingRef.current = true;
 
@@ -646,9 +725,39 @@ function PatternCanvas({
   function handlePointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (movePan(event)) return;
 
+    // BACKSTITCH PREVIEW
+
+    if (selectedTool === "backstitch") {
+      const start = backstitchStartRef.current;
+
+      if (start) {
+        const point = getGridPointFromPointer(event);
+
+        setBackstitchPreview((current) => {
+          if (
+            current &&
+            current.end?.x === point?.x &&
+            current.end?.y === point?.y &&
+            current.color === selectedColor
+          ) {
+            return current;
+          }
+
+          return {
+            start,
+            end: point,
+            color: selectedColor,
+          };
+        });
+      }
+
+      return;
+    }
+
     if (!isPaintingRef.current) return;
 
     // FRENCH KNOT
+
     if (selectedTool === "french-knot") {
       const point = getGridPointFromPointer(event);
 
@@ -660,12 +769,14 @@ function PatternCanvas({
     }
 
     // ERASER
+
     if (selectedTool === "eraser") {
       eraseAtPointer(event);
       return;
     }
 
     // PENCIL AND HALF STITCH
+
     const cell = getCellFromPointer(event);
 
     if (!cell) return;
@@ -693,6 +804,23 @@ function PatternCanvas({
   }
 
   // ========================================
+  // POINTER LEAVE
+  // ========================================
+
+  function handlePointerLeave() {
+    if (selectedTool !== "backstitch") return;
+
+    setBackstitchPreview((current) => {
+      if (!current) return null;
+
+      return {
+        ...current,
+        end: null,
+      };
+    });
+  }
+
+  // ========================================
   // RENDER
   // ========================================
 
@@ -705,6 +833,8 @@ function PatternCanvas({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        onLostPointerCapture={handlePointerUp}
       />
     </div>
   );

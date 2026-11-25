@@ -1,82 +1,78 @@
-import { useEffect, useState } from "react";
-import type { Pattern } from "../../types/pattern";
-import AddColorsModal from "../modals/AddColorsModal";
+import { useState } from "react";
 
-import {
-  getAllDMCColors,
-  getUserColorPalettes,
-  type DMCColor,
-  type UserColorPalette,
+import type { Pattern } from "../../types/pattern";
+
+import type {
+  DMCColor,
+  UserColorPalette,
 } from "../../services/colorPaletteService";
+
+import AddColorsModal from "../modals/AddColorsModal";
 
 type ColorPaletteProps = {
   selectedColor: string;
   onColorChange: (color: string) => void;
   pattern: Pattern;
+
+  selectedPaletteId: string;
+  onPaletteChange: (paletteId: string) => void;
+
+  allColors: DMCColor[];
+  palettes: UserColorPalette[];
+
+  loading: boolean;
+  error: string;
+
+  onPalettesUpdated: () => Promise<void>;
+  paletteSaving: boolean;
 };
 
 function ColorPalette({
   selectedColor,
   onColorChange,
   pattern,
+  selectedPaletteId,
+  onPaletteChange,
+  allColors,
+  palettes,
+  loading,
+  error,
+  onPalettesUpdated,
+  paletteSaving,
 }: ColorPaletteProps) {
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("number");
 
-  const [selectedPaletteId, setSelectedPaletteId] = useState("all");
-
-  const [palettes, setPalettes] = useState<UserColorPalette[]>([]);
-  const [allColors, setAllColors] = useState<DMCColor[]>([]);
-
   const [isAddColorsOpen, setIsAddColorsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  // Load palettes and DMC colors
-  async function loadPalettes() {
-    try {
-      setError("");
+  // ACTIVE PALETTE
 
-      const [userPalettes, dmcColors] = await Promise.all([
-        getUserColorPalettes(),
-        getAllDMCColors(),
-      ]);
-
-      setPalettes(userPalettes);
-      setAllColors(dmcColors);
-    } catch (err) {
-      console.error("Error loading color palettes:", err);
-      setError("Could not load color palettes.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadPalettes();
-  }, []);
-
-  // Find active palette
   const activePalette = palettes.find(
     (palette) => String(palette.palette_id) === selectedPaletteId,
   );
 
-  // Get active colors
   const activeColors = activePalette ? activePalette.colors : allColors;
 
-  // Get colors used in pattern
-  const usedColors = new Set([
-    ...pattern.stitches.flat().filter((color) => color !== null),
-    ...(pattern.halfStitches ?? []).map((stitch) => stitch.color),
-    ...(pattern.backstitches ?? []).map((stitch) => stitch.color),
-    ...(pattern.frenchKnots ?? []).map((knot) => knot.color),
-  ]);
+  // USED COLORS
 
-  // Filter and sort colors
+  const usedColors = new Set(
+    [
+      ...pattern.stitches.flat().filter((color) => color !== null),
+
+      ...(pattern.halfStitches ?? []).map((stitch) => stitch.color),
+
+      ...(pattern.backstitches ?? []).map((stitch) => stitch.color),
+
+      ...(pattern.frenchKnots ?? []).map((knot) => knot.color),
+    ].map((color) => color.toLowerCase()),
+  );
+
+  // FILTER AND SORT
+
   const displayedColors = [...activeColors]
     .filter((color) => {
       if (filter === "used") {
-        return usedColors.has(color.hex);
+        return usedColors.has(color.hex.toLowerCase());
       }
 
       return true;
@@ -86,20 +82,33 @@ function ColorPalette({
         return a.id - b.id;
       }
 
-      return a.code.localeCompare(b.code, undefined, {
-        numeric: true,
-      });
+      return a.code.localeCompare(b.code, undefined, { numeric: true });
     });
+
+  // RENDER
+
   return (
     <div className="color-palette">
+      {/* ACTIVE PALETTE */}
+
       <div className="palette-header">
         <label htmlFor="active-palette">Active palette</label>
 
         <select
           id="active-palette"
           value={selectedPaletteId}
-          onChange={(event) => setSelectedPaletteId(event.target.value)}>
+          disabled={loading || paletteSaving}
+          onChange={(event) => {
+            setIsAddColorsOpen(false);
+            onPaletteChange(event.target.value);
+          }}>
           <option value="all">All DMC colors</option>
+
+          {selectedPaletteId !== "all" && !activePalette && (
+            <option value={selectedPaletteId}>
+              {loading ? "Loading palette..." : "Unavailable palette"}
+            </option>
+          )}
 
           {palettes.map((palette) => (
             <option key={palette.palette_id} value={String(palette.palette_id)}>
@@ -108,6 +117,8 @@ function ColorPalette({
           ))}
         </select>
       </div>
+
+      {/* FILTER AND SORT */}
 
       <div className="palette-controls">
         <div>
@@ -135,10 +146,12 @@ function ColorPalette({
         </div>
       </div>
 
+      {/* COLOR GRID */}
+
       {loading ? (
         <p>Loading colors...</p>
       ) : error ? (
-        <p>{error}</p>
+        <p role="alert">{error}</p>
       ) : (
         <div className="color-grid">
           {displayedColors.map((color) => (
@@ -146,7 +159,7 @@ function ColorPalette({
               key={color.code}
               type="button"
               className={
-                selectedColor === color.hex
+                selectedColor.toLowerCase() === color.hex.toLowerCase()
                   ? "color-swatch selected"
                   : "color-swatch"
               }
@@ -161,7 +174,9 @@ function ColorPalette({
             </button>
           ))}
 
-          {selectedPaletteId !== "all" && activePalette && (
+          {/* ADD COLORS */}
+
+          {activePalette && (
             <button
               type="button"
               className="add-color-button"
@@ -171,6 +186,8 @@ function ColorPalette({
             </button>
           )}
 
+          {/* ADD COLORS MODAL */}
+
           {isAddColorsOpen && activePalette && (
             <AddColorsModal
               paletteId={activePalette.palette_id}
@@ -178,7 +195,7 @@ function ColorPalette({
               existingColorCodes={activePalette.colors.map(
                 (color) => color.code,
               )}
-              onSaved={loadPalettes}
+              onSaved={onPalettesUpdated}
               onClose={() => setIsAddColorsOpen(false)}
             />
           )}

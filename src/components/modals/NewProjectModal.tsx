@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import CreatePaletteModal from "./CreatePaletteModal";
@@ -6,12 +6,7 @@ import CreatePaletteModal from "./CreatePaletteModal";
 import type { CustomPalette } from "../../types/palette";
 import type { Project } from "../../types/project";
 
-import {
-  getUserColorPalettes,
-  getAllDMCColors,
-  type UserColorPalette,
-  type DMCColor,
-} from "../../services/colorPaletteService";
+import { useColorPalettes } from "../../hooks/useColorPalettes";
 
 import { createProject, updateProject } from "../../services/projectService";
 
@@ -64,11 +59,13 @@ function NewProjectModal({
     project?.palette_id == null ? "all" : String(project.palette_id),
   );
 
-  const [customPalettes, setCustomPalettes] = useState<UserColorPalette[]>([]);
-  const [allColors, setAllColors] = useState<DMCColor[]>([]);
-
-  const [loadingPalettes, setLoadingPalettes] = useState(true);
-  const [paletteError, setPaletteError] = useState("");
+  const {
+    palettes: customPalettes,
+    allColors,
+    loading: loadingPalettes,
+    error: paletteError,
+    loadPalettes,
+  } = useColorPalettes();
 
   // PROJECT
   const [isCreatingProject, setIsCreatingProject] = useState(false);
@@ -80,30 +77,6 @@ function NewProjectModal({
   // SIZE CALCULATOR
   const widthInCm = (width / fabricCount) * 2.54;
   const heightInCm = (height / fabricCount) * 2.54;
-
-  // FETCH USER PALETTES AND DMC COLORS
-  const loadPalettes = async () => {
-    try {
-      setPaletteError("");
-
-      const [palettes, colors] = await Promise.all([
-        getUserColorPalettes(),
-        getAllDMCColors(),
-      ]);
-
-      setCustomPalettes(palettes);
-      setAllColors(colors);
-    } catch (error) {
-      console.error("Error loading palettes:", error);
-      setPaletteError("Could not load your saved palettes.");
-    } finally {
-      setLoadingPalettes(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPalettes();
-  }, []);
 
   // SAVE NEW PALETTE
   const handlePaletteSave = async (palette: CustomPalette) => {
@@ -198,8 +171,7 @@ function NewProjectModal({
         className="new-project-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="new-project-title"
-      >
+        aria-labelledby="new-project-title">
         {/* HEADER */}
         <header className="new-project-header">
           <span className="new-project-label">
@@ -210,8 +182,7 @@ function NewProjectModal({
             type="button"
             className="new-project-close"
             onClick={onClose}
-            aria-label="Close modal"
-          >
+            aria-label="Close modal">
             ×
           </button>
 
@@ -323,8 +294,7 @@ function NewProjectModal({
                     fabricCount === count ? "selected" : ""
                   }`}
                   onClick={() => setFabricCount(count)}
-                  aria-pressed={fabricCount === count}
-                >
+                  aria-pressed={fabricCount === count}>
                   <strong>{count}</strong>
                   <span>COUNT</span>
                 </button>
@@ -345,8 +315,7 @@ function NewProjectModal({
                   onClick={() => setFabricColor(color.name)}
                   aria-label={color.name}
                   aria-pressed={fabricColor === color.name}
-                  title={color.name}
-                >
+                  title={color.name}>
                   {fabricColor === color.name && (
                     <span className="fabric-color-check">✓</span>
                   )}
@@ -384,8 +353,7 @@ function NewProjectModal({
                       selectedPalette === palette.id ? "selected" : ""
                     }`}
                     onClick={() => setSelectedPalette(palette.id)}
-                    aria-pressed={selectedPalette === palette.id}
-                  >
+                    aria-pressed={selectedPalette === palette.id}>
                     <span className="new-project-palette-radio">
                       {selectedPalette === palette.id && (
                         <span className="new-project-palette-radio-dot" />
@@ -415,8 +383,7 @@ function NewProjectModal({
             <button
               type="button"
               className="new-project-palette-add"
-              onClick={() => setIsCreatingPalette(true)}
-            >
+              onClick={() => setIsCreatingPalette(true)}>
               + Create a new palette
             </button>
           </section>
@@ -430,8 +397,7 @@ function NewProjectModal({
             type="button"
             className="new-project-cancel"
             onClick={onClose}
-            disabled={isCreatingProject}
-          >
+            disabled={isCreatingProject}>
             CANCEL
           </button>
 
@@ -439,8 +405,7 @@ function NewProjectModal({
             type="button"
             className="new-project-create"
             onClick={handleCreatePattern}
-            disabled={isCreatingProject}
-          >
+            disabled={isCreatingProject}>
             {isCreatingProject
               ? isEditing
                 ? "SAVING..."

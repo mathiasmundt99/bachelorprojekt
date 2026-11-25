@@ -1,5 +1,6 @@
 import type { Pattern } from "../../types/pattern";
-import dmcColors from "../../data/dmc-colors.json";
+
+import { getDmcCode, getTextColor } from "../colors/colorUtils";
 
 export const CELL_SIZE = 24;
 
@@ -26,34 +27,9 @@ type DrawPatternOptions = {
   viewport: Viewport;
   width: number;
   height: number;
+  dmcCodeByHex: ReadonlyMap<string, string>;
   backstitchPreview?: BackstitchPreview | null;
 };
-
-// Find DMC-koden ud fra farvens hex-værdi
-const dmcCodeByHex = new Map(
-  dmcColors.map((color) => [color.hex.toLowerCase(), color.code]),
-);
-
-function getDmcCode(hex: string): string | null {
-  return dmcCodeByHex.get(hex.toLowerCase()) ?? null;
-}
-
-// Vælg en læsbar tekstfarve
-function getTextColor(hex: string): string {
-  const normalized = hex.replace("#", "");
-
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    return "#000000";
-  }
-
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-  return brightness < 150 ? "#ffffff" : "#000000";
-}
 
 export function drawPattern({
   canvas,
@@ -61,6 +37,7 @@ export function drawPattern({
   viewport,
   width,
   height,
+  dmcCodeByHex,
   backstitchPreview,
 }: DrawPatternOptions) {
   if (width <= 0 || height <= 0) return;
@@ -75,6 +52,7 @@ export function drawPattern({
   if (!ctx) return;
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.setTransform(
@@ -87,7 +65,7 @@ export function drawPattern({
   );
 
   // ========================================
-  // DRAW FULL STITCHES
+  // FULL STITCHES
   // ========================================
 
   for (let y = 0; y < pattern.height; y++) {
@@ -103,7 +81,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW HALF STITCHES
+  // HALF STITCHES
   // ========================================
 
   for (const stitch of pattern.halfStitches ?? []) {
@@ -144,7 +122,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW GRID
+  // GRID
   // ========================================
 
   for (let x = 0; x <= pattern.width; x++) {
@@ -152,11 +130,15 @@ export function drawPattern({
     const isMajorLine = x % 10 === 0;
 
     ctx.beginPath();
+
     ctx.strokeStyle = isMajorLine ? "#222222" : "#b8b8b8";
+
     ctx.lineWidth = (isMajorLine ? 2 : 1) / viewport.zoom;
 
     ctx.moveTo(position, 0);
+
     ctx.lineTo(position, pattern.height * CELL_SIZE);
+
     ctx.stroke();
   }
 
@@ -165,21 +147,30 @@ export function drawPattern({
     const isMajorLine = y % 10 === 0;
 
     ctx.beginPath();
+
     ctx.strokeStyle = isMajorLine ? "#222222" : "#b8b8b8";
+
     ctx.lineWidth = (isMajorLine ? 2 : 1) / viewport.zoom;
 
     ctx.moveTo(0, position);
+
     ctx.lineTo(pattern.width * CELL_SIZE, position);
+
     ctx.stroke();
   }
 
   // ========================================
-  // DRAW DMC NUMBERS ON FULL STITCHES
+  // FULL STITCH DMC NUMBERS
   // ========================================
 
   if (viewport.zoom >= 0.75) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    ctx.font = "bold 9px Arial";
+
+    const halfStitchCells = new Set(
+      (pattern.halfStitches ?? []).map((stitch) => `${stitch.x},${stitch.y}`),
+    );
 
     for (let y = 0; y < pattern.height; y++) {
       for (let x = 0; x < pattern.width; x++) {
@@ -187,21 +178,18 @@ export function drawPattern({
 
         if (!color) continue;
 
-        // Undgå overlappende numre på half stitches
-        const hasHalfStitch = (pattern.halfStitches ?? []).some(
-          (stitch) => stitch.x === x && stitch.y === y,
-        );
+        if (halfStitchCells.has(`${x},${y}`)) {
+          continue;
+        }
 
-        if (hasHalfStitch) continue;
-
-        const code = getDmcCode(color);
+        const code = getDmcCode(color, dmcCodeByHex);
 
         if (!code) continue;
 
         ctx.fillStyle = getTextColor(color);
-        ctx.font = "bold 9px Arial";
 
         const centerX = x * CELL_SIZE + CELL_SIZE / 2;
+
         const centerY = y * CELL_SIZE + CELL_SIZE / 2;
 
         ctx.fillText(code, centerX, centerY, CELL_SIZE - 2);
@@ -210,7 +198,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW DMC NUMBERS ON HALF STITCHES
+  // HALF STITCH DMC NUMBERS
   // ========================================
 
   if (viewport.zoom >= 1.25) {
@@ -219,7 +207,7 @@ export function drawPattern({
     ctx.font = "bold 7px Arial";
 
     for (const stitch of pattern.halfStitches ?? []) {
-      const code = getDmcCode(stitch.color);
+      const code = getDmcCode(stitch.color, dmcCodeByHex);
 
       if (!code) continue;
 
@@ -258,7 +246,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW BACKSTITCHES
+  // BACKSTITCHES
   // ========================================
 
   ctx.save();
@@ -269,7 +257,6 @@ export function drawPattern({
 
   for (const stitch of pattern.backstitches ?? []) {
     ctx.strokeStyle = stitch.color;
-
     ctx.beginPath();
 
     ctx.moveTo(stitch.startX * CELL_SIZE, stitch.startY * CELL_SIZE);
@@ -282,27 +269,26 @@ export function drawPattern({
   ctx.restore();
 
   // ========================================
-  // DRAW FRENCH KNOTS
+  // FRENCH KNOTS
   // ========================================
 
   for (const knot of pattern.frenchKnots ?? []) {
-    // Placér knuden på gitterets skæringspunkt
-    const x = knot.x * CELL_SIZE;
-    const y = knot.y * CELL_SIZE;
-
-    const radius = CELL_SIZE * 0.2;
-
     ctx.fillStyle = knot.color;
-
     ctx.beginPath();
 
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.arc(
+      knot.x * CELL_SIZE,
+      knot.y * CELL_SIZE,
+      CELL_SIZE * 0.2,
+      0,
+      Math.PI * 2,
+    );
 
     ctx.fill();
   }
 
   // ========================================
-  // DRAW BACKSTITCH PREVIEW
+  // BACKSTITCH PREVIEW
   // ========================================
 
   if (backstitchPreview) {
@@ -313,7 +299,6 @@ export function drawPattern({
 
     ctx.save();
 
-    // Preview line
     if (end) {
       ctx.globalAlpha = 0.65;
       ctx.strokeStyle = color;
@@ -330,7 +315,6 @@ export function drawPattern({
       ctx.stroke();
     }
 
-    // Start point
     ctx.globalAlpha = 1;
     ctx.setLineDash([]);
 
@@ -345,7 +329,6 @@ export function drawPattern({
     ctx.fill();
     ctx.stroke();
 
-    // End point
     if (end) {
       ctx.beginPath();
 
@@ -365,7 +348,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW COLUMN NUMBERS
+  // COLUMN NUMBERS
   // ========================================
 
   ctx.fillStyle = "#222222";
@@ -380,7 +363,7 @@ export function drawPattern({
   }
 
   // ========================================
-  // DRAW ROW NUMBERS
+  // ROW NUMBERS
   // ========================================
 
   ctx.textAlign = "right";

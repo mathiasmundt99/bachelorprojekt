@@ -1,54 +1,40 @@
-import dmcColors from "../../data/dmc-colors.json";
+import { getDmcCode, getTextColor } from "../../utils/colors/colorUtils";
 
 type SwapToolPanelProps = {
   fromColor: string | null;
   toColor: string | null;
+  dmcCodeByHex: ReadonlyMap<string, string>;
   onReset: () => void;
+  onClose: () => void;
 };
 
-function getDmcCode(hex: string | null): string {
-  if (!hex) return "";
-
-  const color = dmcColors.find(
-    (item) => item.hex.toLowerCase() === hex.toLowerCase(),
-  );
-
-  return color?.code ?? "";
-}
-
-function getTextColor(hex: string): string {
-  const normalized = hex.replace("#", "");
-
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    return "#000000";
-  }
-
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-  return brightness < 150 ? "#ffffff" : "#000000";
-}
-
-function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
+function SwapToolPanel({
+  fromColor,
+  toColor,
+  dmcCodeByHex,
+  onReset,
+  onClose,
+}: SwapToolPanelProps) {
   return (
     <div className="swap-tool-panel tool-popup">
-      <div className="swap-panel-header tool-popup-header">
+      {/* HEADER */}
+
+      <div className="tool-popup-header">
         <strong>SWAP COLORS</strong>
 
         <button
           type="button"
-          className="swap-reset-button"
-          onClick={onReset}
-          title="Reset swap colors"
-          aria-label="Reset swap colors">
+          className="tool-popup-close"
+          onClick={onClose}
+          aria-label="Close swap colors"
+          title="Close swap colors">
           <span className="material-symbols-sharp" aria-hidden="true">
-            restart_alt
+            close
           </span>
         </button>
       </div>
+
+      {/* DESCRIPTION */}
 
       <p className="swap-panel-description">
         {!fromColor
@@ -57,6 +43,8 @@ function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
             ? "Choose a replacement color from the palette on the right."
             : "Colors replaced! Select another stitch or reset to start again."}
       </p>
+
+      {/* COLOR PREVIEW */}
 
       <div className="swap-color-row">
         <div className="swap-color-item">
@@ -70,7 +58,7 @@ function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
                   }
                 : undefined
             }>
-            {getDmcCode(fromColor)}
+            {getDmcCode(fromColor, dmcCodeByHex)}
           </div>
 
           <span className="swap-color-label">FROM</span>
@@ -91,12 +79,25 @@ function SwapToolPanel({ fromColor, toColor, onReset }: SwapToolPanelProps) {
                   }
                 : undefined
             }>
-            {getDmcCode(toColor)}
+            {getDmcCode(toColor, dmcCodeByHex)}
           </div>
 
           <span className="swap-color-label">TO</span>
         </div>
       </div>
+
+      {/* RESET */}
+
+      <button
+        type="button"
+        className="swap-reset-button"
+        onClick={onReset}
+        disabled={!fromColor && !toColor}>
+        <span className="material-symbols-sharp" aria-hidden="true">
+          restart_alt
+        </span>
+        Reset
+      </button>
     </div>
   );
 }

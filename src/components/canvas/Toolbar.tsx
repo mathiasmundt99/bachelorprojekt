@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-
+import { useState } from "react";
 import type { HalfStitchDirection, Tool } from "../../types/pattern";
 
 type ToolbarProps = {
@@ -31,6 +30,11 @@ const stitchTools: {
   icon: string;
 }[] = [
   {
+    id: "pencil",
+    label: "Full stitch",
+    icon: "square",
+  },
+  {
     id: "half-stitch",
     label: "Half stitch",
     icon: "change_history",
@@ -52,10 +56,26 @@ const halfStitchDirections: {
   label: string;
   icon: string;
 }[] = [
-  { id: "top-left", label: "Top left", icon: "◤" },
-  { id: "top-right", label: "Top right", icon: "◥" },
-  { id: "bottom-left", label: "Bottom left", icon: "◣" },
-  { id: "bottom-right", label: "Bottom right", icon: "◢" },
+  {
+    id: "top-left",
+    label: "Top left",
+    icon: "◤",
+  },
+  {
+    id: "top-right",
+    label: "Top right",
+    icon: "◥",
+  },
+  {
+    id: "bottom-left",
+    label: "Bottom left",
+    icon: "◣",
+  },
+  {
+    id: "bottom-right",
+    label: "Bottom right",
+    icon: "◢",
+  },
 ];
 
 function MaterialIcon({ name, size = 24 }: { name: string; size?: number }) {
@@ -80,12 +100,15 @@ function StitchTypesIcon() {
       <circle cx="9" cy="10" r="7" fill="#000000" />
 
       <rect x="21" y="3" width="15" height="15" stroke="#000000" />
+
       <path d="M21 3H36L21 18Z" fill="#000000" />
 
       <rect x="2" y="23" width="15" height="15" stroke="#000000" />
+
       <path d="M2 23H9.5V38H2Z" fill="#000000" />
 
       <rect x="21" y="23" width="15" height="15" stroke="#000000" />
+
       <path d="M36 23V38H21Z" fill="#000000" />
     </svg>
   );
@@ -103,58 +126,43 @@ function Toolbar({
 }: ToolbarProps) {
   const [stitchPopupOpen, setStitchPopupOpen] = useState(false);
 
-  const popupRef = useRef<HTMLDivElement>(null);
+  const isStitchTool =
+    selectedTool === "half-stitch" ||
+    selectedTool === "backstitch" ||
+    selectedTool === "french-knot";
 
-  const isStitchTool = stitchTools.some((tool) => tool.id === selectedTool);
-
-  useEffect(() => {
-    function handlePointerDown(event: PointerEvent) {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
-      ) {
-        setStitchPopupOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setStitchPopupOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  // ========================================
+  // SELECT STITCH TYPE
+  // ========================================
 
   function selectStitchTool(tool: Tool) {
     onToolChange(tool);
-    setStitchPopupOpen(tool === "half-stitch");
   }
+
+  // ========================================
+  // SELECT HALF STITCH DIRECTION
+  // ========================================
 
   function selectDirection(direction: HalfStitchDirection) {
     onHalfStitchDirectionChange?.(direction);
-    setStitchPopupOpen(false);
   }
+
+  // ========================================
+  // RENDER
+  // ========================================
 
   return (
     <div className="toolbar">
       <div className="toolbar-tools">
+        {/* STANDARD TOOLS */}
+
         {tools.map((tool) => (
           <button
             key={tool.id}
             className={
               selectedTool === tool.id ? "tool-button active" : "tool-button"
             }
-            onClick={() => {
-              onToolChange(tool.id);
-              setStitchPopupOpen(false);
-            }}
+            onClick={() => onToolChange(tool.id)}
             type="button"
             title={tool.label}
             aria-label={tool.label}
@@ -166,22 +174,30 @@ function Toolbar({
         ))}
 
         {/* STITCH TYPES */}
-        <div className="stitch-tool-wrapper" ref={popupRef}>
+
+        <div className="stitch-tool-wrapper">
           <button
             type="button"
-            className={isStitchTool ? "tool-button active" : "tool-button"}
+            className={
+              isStitchTool || stitchPopupOpen
+                ? "tool-button active"
+                : "tool-button"
+            }
             title="Stitch types"
             aria-label="Stitch types"
             aria-expanded={stitchPopupOpen}
-            aria-haspopup="true"
             onClick={() => setStitchPopupOpen((open) => !open)}>
             <span className="tool-icon">
               <StitchTypesIcon />
             </span>
           </button>
 
+          {/* STITCH TYPES POPUP */}
+
           {stitchPopupOpen && (
             <div className="stitch-popup tool-popup">
+              {/* POPUP HEADER */}
+
               <div className="stitch-popup-header tool-popup-header">
                 <strong>STITCH TYPES</strong>
 
@@ -194,6 +210,8 @@ function Toolbar({
                 </button>
               </div>
 
+              {/* STITCH OPTIONS */}
+
               <div className="stitch-popup-options">
                 {stitchTools.map((tool) => (
                   <button
@@ -202,6 +220,7 @@ function Toolbar({
                     className={`stitch-popup-option tool-popup-option ${
                       selectedTool === tool.id ? "active" : ""
                     }`}
+                    aria-pressed={selectedTool === tool.id}
                     onClick={() => selectStitchTool(tool.id)}>
                     <span className="stitch-popup-option-icon">
                       <MaterialIcon name={tool.icon} size={22} />
@@ -211,6 +230,8 @@ function Toolbar({
                   </button>
                 ))}
               </div>
+
+              {/* HALF STITCH DIRECTIONS */}
 
               {selectedTool === "half-stitch" && (
                 <div className="stitch-popup-directions">
@@ -243,7 +264,8 @@ function Toolbar({
         </div>
       </div>
 
-      {/* BOTTOM ACTIONS */}
+      {/* BOTTOM TOOLS */}
+
       <div className="toolbar-bottom">
         <button
           className="tool-button"
