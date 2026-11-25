@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 
@@ -8,36 +8,56 @@ import InventoryPage from "./pages/InventoryPage";
 import FinishedPage from "./pages/FinishPage";
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   useEffect(() => {
-    const testForeignPalette = async () => {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: "test1@example.com",
-        password: "Test1234!",
-      });
+    const authenticateUser = async () => {
+      try {
+        // Tjek om brugeren allerede har en aktiv session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (loginError) {
-        console.error("Login-fejl:", loginError.message);
-        return;
+        if (sessionError) throw sessionError;
+
+        // Brug eksisterende session
+        if (session) {
+          setIsAuthenticated(true);
+          return;
+        }
+
+        // Login med testbruger
+        const { error } = await supabase.auth.signInWithPassword({
+          email: "test1@example.com",
+          password: "Test1234!",
+        });
+
+        if (error) throw error;
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Authentication error:", error);
+
+        setAuthError(
+          error instanceof Error
+            ? error.message
+            : "Could not authenticate user.",
+        );
       }
-
-      const { data, error } = await supabase
-        .from("projects")
-        .insert({
-          user_id: "6bd97120-b559-4706-8329-07ca2a8cf1d4",
-          name: "RLS Palette Test",
-          width: 100,
-          height: 80,
-          fabric_count: 14,
-          fabric_color: "Natural",
-          palette_id: null,
-        })
-        .select();
-
-      console.log("FOREIGN PALETTE TEST:", { data, error });
     };
 
-    testForeignPalette();
+    authenticateUser();
   }, []);
+
+  if (authError) {
+    return <p>Login error: {authError}</p>;
+  }
+
+  if (!isAuthenticated) {
+    return <p>Authenticating...</p>;
+  }
 
   return (
     <Routes>
