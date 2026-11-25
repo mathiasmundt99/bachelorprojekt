@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-
+import type { CanvasSettings } from "../../types/canvasSettings";
 import type {
   Pattern,
   Tool,
@@ -25,6 +25,8 @@ type Point = {
 type PatternCanvasProps = {
   pattern: Pattern;
   dmcCodeByHex: ReadonlyMap<string, string>;
+  stitchSymbols: ReadonlyMap<string, string>;
+  settings: CanvasSettings;
   selectedTool: Tool;
   selectedColor: string;
   selectedHalfStitchDirection: HalfStitchDirection;
@@ -42,6 +44,8 @@ function PatternCanvas({
   selectedColor,
   selectedHalfStitchDirection,
   dmcCodeByHex,
+  stitchSymbols,
+  settings,
   onPatternChange,
   onColorChange,
   onToolChange,
@@ -79,10 +83,20 @@ function PatternCanvas({
       viewport,
       width: canvasSize.width,
       height: canvasSize.height,
+      settings,
       dmcCodeByHex,
+      stitchSymbols,
       backstitchPreview,
     });
-  }, [pattern, viewport, canvasSize, dmcCodeByHex, backstitchPreview]);
+  }, [
+    pattern,
+    viewport,
+    canvasSize,
+    settings,
+    dmcCodeByHex,
+    stitchSymbols,
+    backstitchPreview,
+  ]);
 
   // ========================================
   // RESET BACKSTITCH

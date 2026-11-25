@@ -10,6 +10,9 @@ type ToolbarProps = {
   canRedo: boolean;
   selectedHalfStitchDirection?: HalfStitchDirection;
   onHalfStitchDirectionChange?: (direction: HalfStitchDirection) => void;
+
+  settingsOpen: boolean;
+  onSettingsClick: () => void;
 };
 
 const tools: {
@@ -123,6 +126,8 @@ function Toolbar({
   canRedo,
   selectedHalfStitchDirection = "top-left",
   onHalfStitchDirectionChange,
+  settingsOpen,
+  onSettingsClick,
 }: ToolbarProps) {
   const [stitchPopupOpen, setStitchPopupOpen] = useState(false);
 
@@ -292,10 +297,15 @@ function Toolbar({
         </button>
 
         <button
-          className="tool-button"
+          className={`tool-button ${settingsOpen ? "active" : ""}`}
           type="button"
-          title="Settings"
-          aria-label="Settings">
+          title="Canvas settings"
+          aria-label="Canvas settings"
+          aria-expanded={settingsOpen}
+          onClick={() => {
+            setStitchPopupOpen(false);
+            onSettingsClick();
+          }}>
           <span className="tool-icon">
             <MaterialIcon name="settings" />
           </span>

@@ -15,6 +15,9 @@ import { createDmcCodeMap } from "../utils/colors/colorUtils";
 import { updateProject } from "../services/projectService";
 
 import type { Pattern, Tool, HalfStitchDirection } from "../types/pattern";
+import CanvasSettingsPanel from "../components/canvas/CanvasSettingsPanel";
+import { useCanvasSettings } from "../hooks/useCanvasSettings";
+import { createStitchSymbolMap } from "../utils/canvas/stitchSymbols";
 
 import "../styles/CanvasPage.css";
 
@@ -108,6 +111,10 @@ function CanvasPage() {
   const [paletteSaveError, setPaletteSaveError] = useState("");
 
   const dmcCodeByHex = useMemo(() => createDmcCodeMap(allColors), [allColors]);
+  const stitchSymbols = useMemo(
+    () => createStitchSymbolMap(dmcCodeByHex),
+    [dmcCodeByHex],
+  );
 
   async function handlePaletteChange(paletteId: string) {
     if (paletteSaving || paletteId === selectedPaletteId) {
@@ -147,6 +154,15 @@ function CanvasPage() {
   // ========================================
 
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
+  const {
+    settings,
+    settingsOpen,
+    isResizing,
+    updateSettings,
+    toggleSettings,
+    closeSettings,
+    toggleResize,
+  } = useCanvasSettings();
 
   const [selectedColor, setSelectedColor] = useState("#000000");
 
@@ -327,7 +343,21 @@ function CanvasPage() {
             canRedo={canRedo}
             selectedHalfStitchDirection={selectedHalfStitchDirection}
             onHalfStitchDirectionChange={setSelectedHalfStitchDirection}
+            settingsOpen={settingsOpen}
+            onSettingsClick={toggleSettings}
           />
+
+          {settingsOpen && (
+            <CanvasSettingsPanel
+              settings={settings}
+              width={pattern.width}
+              height={pattern.height}
+              isResizing={isResizing}
+              onSettingsChange={updateSettings}
+              onToggleResize={toggleResize}
+              onClose={closeSettings}
+            />
+          )}
         </aside>
 
         {/* CANVAS */}
@@ -339,6 +369,8 @@ function CanvasPage() {
             selectedColor={selectedColor}
             selectedHalfStitchDirection={selectedHalfStitchDirection}
             dmcCodeByHex={dmcCodeByHex}
+            stitchSymbols={stitchSymbols}
+            settings={settings}
             onPatternChange={setPattern}
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}

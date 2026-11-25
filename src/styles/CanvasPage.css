@@ -892,6 +892,303 @@
 }
 
 /* ========================================
+   CANVAS SETTINGS POPUP
+======================================== */
+
+.canvas-settings-popup {
+  position: absolute;
+  left: calc(100% + 16px);
+  bottom: 12px;
+  z-index: 100;
+
+  width: 300px;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.settings-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-heading .material-symbols-sharp {
+  font-size: 22px;
+}
+
+/* ========================================
+   SETTINGS SECTIONS
+======================================== */
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 14px 0;
+  border-top: 2px solid #202020;
+}
+
+.settings-section:last-child {
+  padding-bottom: 0;
+}
+
+.settings-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.settings-section-title .material-symbols-sharp {
+  font-size: 20px;
+}
+
+/* ========================================
+   STITCH DISPLAY OPTIONS
+======================================== */
+
+.settings-display-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.settings-display-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  min-width: 0;
+  padding: 12px 4px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
+  color: #202020;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #202020;
+}
+
+.settings-display-option .material-symbols-sharp {
+  font-size: 26px;
+}
+
+.settings-display-option:hover {
+  background: #d9b9f1;
+}
+
+.settings-display-option.active {
+  background: #d7f46a;
+}
+
+/* ========================================
+   CANVAS DIMENSIONS
+======================================== */
+
+.settings-dimensions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settings-dimension {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px;
+
+  border: 2px solid #202020;
+  background: #f7edf8;
+}
+
+.settings-dimension > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-dimension > div > span {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.settings-dimension strong {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+/* ========================================
+   RESIZE BUTTON
+======================================== */
+
+.settings-resize-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 10px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #f04f98;
+  color: #202020;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #202020;
+}
+
+.settings-resize-button:hover {
+  background: #d9b9f1;
+}
+
+.settings-resize-button.active {
+  background: #d7f46a;
+}
+
+.settings-hint {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* ========================================
+   GRID TOGGLES
+======================================== */
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  padding: 8px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
+  color: #202020;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-toggle > .material-symbols-sharp {
+  font-size: 20px;
+}
+
+.settings-toggle:hover:not(:disabled) {
+  background: #f7edf8;
+}
+
+.settings-switch {
+  position: relative;
+
+  width: 34px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-left: auto;
+
+  box-sizing: border-box;
+  border: 2px solid #202020;
+  background: #f7edf8;
+}
+
+.settings-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+
+  width: 10px;
+  height: 10px;
+
+  background: #202020;
+  transition: transform 0.15s ease;
+}
+
+.settings-toggle.active .settings-switch {
+  background: #d7f46a;
+}
+
+.settings-toggle.active .settings-switch::after {
+  transform: translateX(16px);
+}
+
+.settings-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   SETTINGS SELECT
+======================================== */
+
+.settings-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.settings-select-label select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 8px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #fffafa;
+  color: #202020;
+
+  font: inherit;
+  cursor: pointer;
+
+  box-shadow: 2px 2px 0 #202020;
+}
+
+.settings-select-label select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========================================
    FOCUS STYLES
 ======================================== */
 
