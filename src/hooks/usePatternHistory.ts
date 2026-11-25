@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Pattern } from "../types/pattern";
 
 const MAX_HISTORY = 50;
@@ -7,6 +7,7 @@ type HistoryState = {
   past: Pattern[];
   present: Pattern;
   future: Pattern[];
+  strokeStart: Pattern | null;
 };
 
 function patternsEqual(a: Pattern, b: Pattern): boolean {
@@ -24,7 +25,13 @@ function patternsEqual(a: Pattern, b: Pattern): boolean {
     }
   }
 
-  return true;
+  return (
+    JSON.stringify(a.halfStitches ?? []) ===
+      JSON.stringify(b.halfStitches ?? []) &&
+    JSON.stringify(a.backstitches ?? []) ===
+      JSON.stringify(b.backstitches ?? []) &&
+    JSON.stringify(a.frenchKnots ?? []) === JSON.stringify(b.frenchKnots ?? [])
+  );
 }
 
 export function usePatternHistory(initialPattern: Pattern) {
@@ -32,10 +39,8 @@ export function usePatternHistory(initialPattern: Pattern) {
     past: [],
     present: initialPattern,
     future: [],
+    strokeStart: null,
   }));
-
-  // Bruges til at samle et helt penselstrøg i ét historikpunkt
-  const strokeStartRef = useRef<Pattern | null>(null);
 
   // ========================================
   // UPDATE PATTERN
@@ -51,19 +56,20 @@ export function usePatternHistory(initialPattern: Pattern) {
           return current;
         }
 
-        // Under et penselstrøg opdaterer vi kun tegningen
-        if (strokeStartRef.current !== null) {
+        // Update pattern during a stroke
+        if (current.strokeStart !== null) {
           return {
             ...current,
             present: nextPattern,
           };
         }
 
-        // Andre ændringer gemmes som separate historikpunkter
+        // Save separate history entry
         return {
           past: [...current.past, current.present].slice(-MAX_HISTORY),
           present: nextPattern,
           future: [],
+          strokeStart: null,
         };
       });
     },
@@ -75,11 +81,13 @@ export function usePatternHistory(initialPattern: Pattern) {
   // ========================================
 
   const beginStroke = useCallback(() => {
-    strokeStartRef.current = null;
-
     setHistory((current) => {
-      strokeStartRef.current = current.present;
-      return current;
+      if (current.strokeStart !== null) return current;
+
+      return {
+        ...current,
+        strokeStart: current.present,
+      };
     });
   }, []);
 
@@ -88,23 +96,25 @@ export function usePatternHistory(initialPattern: Pattern) {
   // ========================================
 
   const endStroke = useCallback(() => {
-    const strokeStart = strokeStartRef.current;
-
-    if (strokeStart === null) return;
-
     setHistory((current) => {
+      const strokeStart = current.strokeStart;
+
+      if (strokeStart === null) return current;
+
       if (patternsEqual(strokeStart, current.present)) {
-        return current;
+        return {
+          ...current,
+          strokeStart: null,
+        };
       }
 
       return {
         past: [...current.past, strokeStart].slice(-MAX_HISTORY),
         present: current.present,
         future: [],
+        strokeStart: null,
       };
     });
-
-    strokeStartRef.current = null;
   }, []);
 
   // ========================================
@@ -113,6 +123,7 @@ export function usePatternHistory(initialPattern: Pattern) {
 
   const undo = useCallback(() => {
     setHistory((current) => {
+      if (current.strokeStart !== null) return current;
       if (current.past.length === 0) return current;
 
       const previous = current.past[current.past.length - 1];
@@ -121,6 +132,7 @@ export function usePatternHistory(initialPattern: Pattern) {
         past: current.past.slice(0, -1),
         present: previous,
         future: [current.present, ...current.future],
+        strokeStart: null,
       };
     });
   }, []);
@@ -131,6 +143,7 @@ export function usePatternHistory(initialPattern: Pattern) {
 
   const redo = useCallback(() => {
     setHistory((current) => {
+      if (current.strokeStart !== null) return current;
       if (current.future.length === 0) return current;
 
       const next = current.future[0];
@@ -139,6 +152,7 @@ export function usePatternHistory(initialPattern: Pattern) {
         past: [...current.past, current.present].slice(-MAX_HISTORY),
         present: next,
         future: current.future.slice(1),
+        strokeStart: null,
       };
     });
   }, []);
@@ -193,7 +207,7 @@ export function usePatternHistory(initialPattern: Pattern) {
     endStroke,
     undo,
     redo,
-    canUndo: history.past.length > 0,
-    canRedo: history.future.length > 0,
+    canUndo: history.strokeStart === null && history.past.length > 0,
+    canRedo: history.strokeStart === null && history.future.length > 0,
   };
 }

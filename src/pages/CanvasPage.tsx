@@ -18,6 +18,9 @@ function createEmptyPattern(width: number, height: number): Pattern {
     width,
     height,
     stitches: Array.from({ length: height }, () => Array(width).fill(null)),
+    halfStitches: [],
+    backstitches: [],
+    frenchKnots: [],
   };
 }
 
@@ -74,6 +77,7 @@ function CanvasPage() {
   // TOOLS
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
   const [selectedColor, setSelectedColor] = useState("#000000");
+
   const [selectedHalfStitchDirection, setSelectedHalfStitchDirection] =
     useState<HalfStitchDirection>("top-left");
 
@@ -148,7 +152,10 @@ function CanvasPage() {
           type="button"
           className="back-button"
           onClick={() => navigate("/")}>
-          ← Back to home
+          <span className="material-symbols-sharp" aria-hidden="true">
+            chevron_left
+          </span>
+          Back to home
         </button>
 
         <div className="project-name-container">
@@ -180,8 +187,10 @@ function CanvasPage() {
               onClick={startEditingName}
               title="Rename project">
               <span>{projectName}</span>
-              <span className="project-name-edit-icon" aria-hidden="true">
-                ✎
+              <span
+                className="project-name-edit-icon material-symbols-sharp"
+                aria-hidden="true">
+                edit_line
               </span>
             </button>
           )}
@@ -193,7 +202,10 @@ function CanvasPage() {
         </div>
 
         <button type="button" className="next-button" onClick={handleFinish}>
-          › Done / Next
+          Done / Next
+          <span className="material-symbols-sharp" aria-hidden="true">
+            chevron_right
+          </span>
         </button>
       </header>
 
@@ -216,6 +228,7 @@ function CanvasPage() {
             pattern={pattern}
             selectedTool={selectedTool}
             selectedColor={selectedColor}
+            selectedHalfStitchDirection={selectedHalfStitchDirection}
             onPatternChange={setPattern}
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}

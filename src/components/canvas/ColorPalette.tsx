@@ -65,9 +65,12 @@ function ColorPalette({
   const activeColors = activePalette ? activePalette.colors : allColors;
 
   // Get colors used in pattern
-  const usedColors = new Set(
-    pattern.stitches.flat().filter((color) => color !== null),
-  );
+  const usedColors = new Set([
+    ...pattern.stitches.flat().filter((color) => color !== null),
+    ...(pattern.halfStitches ?? []).map((stitch) => stitch.color),
+    ...(pattern.backstitches ?? []).map((stitch) => stitch.color),
+    ...(pattern.frenchKnots ?? []).map((knot) => knot.color),
+  ]);
 
   // Filter and sort colors
   const displayedColors = [...activeColors]

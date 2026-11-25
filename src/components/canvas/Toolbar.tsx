@@ -77,16 +77,16 @@ function StitchTypesIcon() {
       viewBox="0 0 40 40"
       fill="none"
       aria-hidden="true">
-      <circle cx="9" cy="10" r="7" fill="#e90065" />
+      <circle cx="9" cy="10" r="7" fill="#000000" />
 
-      <rect x="21" y="3" width="15" height="15" stroke="#e90065" />
-      <path d="M21 3H36L21 18Z" fill="#e90065" />
+      <rect x="21" y="3" width="15" height="15" stroke="#000000" />
+      <path d="M21 3H36L21 18Z" fill="#000000" />
 
-      <rect x="2" y="23" width="15" height="15" stroke="#e90065" />
-      <path d="M2 23H9.5V38H2Z" fill="#e90065" />
+      <rect x="2" y="23" width="15" height="15" stroke="#000000" />
+      <path d="M2 23H9.5V38H2Z" fill="#000000" />
 
-      <rect x="21" y="23" width="15" height="15" stroke="#e90065" />
-      <path d="M36 23V38H21Z" fill="#e90065" />
+      <rect x="21" y="23" width="15" height="15" stroke="#000000" />
+      <path d="M36 23V38H21Z" fill="#000000" />
     </svg>
   );
 }
