@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 
@@ -8,40 +8,65 @@ import InventoryPage from "./pages/InventoryPage";
 import FinishedPage from "./pages/FinishPage";
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   useEffect(() => {
-    const testDMCInsert = async () => {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: "test1@example.com",
-        password: "Test1234!",
-      });
+    const authenticateUser = async () => {
+      try {
+        // Tjek om brugeren allerede har en aktiv session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (loginError) {
-        console.error("Login-fejl:", loginError.message);
-        return;
+        if (sessionError) throw sessionError;
+
+        // Brug eksisterende session
+        if (session) {
+          setIsAuthenticated(true);
+          return;
+        }
+
+        // Login med testbruger
+        const { error } = await supabase.auth.signInWithPassword({
+          email: "test1@example.com",
+          password: "Test1234!",
+        });
+
+        if (error) throw error;
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Authentication error:", error);
+
+        setAuthError(
+          error instanceof Error
+            ? error.message
+            : "Could not authenticate user.",
+        );
       }
-
-      const { data, error } = await supabase
-        .from("palette_colors")
-        .update({ palette_id: 2 })
-        .eq("palette_id", 1)
-        .eq("dmc_code", "3713")
-        .select();
-
-      console.log("UPDATE palette_colors:", { data, error });
     };
 
-    testDMCInsert();
+    authenticateUser();
   }, []);
+
+  if (authError) {
+    return <p>Login error: {authError}</p>;
+  }
+
+  if (!isAuthenticated) {
+    return <p>Authenticating...</p>;
+  }
 
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/canvas" element={<CanvasPage />} />
+      <Route path="/canvas/:id" element={<CanvasPage />} />
       <Route path="/inventory" element={<InventoryPage />} />
-      <Route path="/finish" element={<FinishedPage />} />
+      <Route path="/finished/:id" element={<FinishedPage />} />
     </Routes>
   );
 }
 
 export default App;
-/* <Route path="/canvas/:id" element={<CanvasPage />} />; */
