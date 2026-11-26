@@ -3,9 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 
 import HomePage from "./pages/HomePage";
-import CanvasPage from "./pages/CanvasPage";
+import ProjectWorkspace from "./pages/ProjectWorkspace";
 import InventoryPage from "./pages/InventoryPage";
-import FinishedPage from "./pages/FinishPage";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -62,9 +61,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/canvas/:id" element={<CanvasPage />} />
       <Route path="/inventory" element={<InventoryPage />} />
-      <Route path="/finished/:id" element={<FinishedPage />} />
+      <Route path="/:page/:id" element={<ProjectWorkspace />} />
     </Routes>
   );
 }

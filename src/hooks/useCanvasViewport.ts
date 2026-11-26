@@ -92,6 +92,8 @@ export function useCanvasViewport(
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0].contentRect;
 
+      if (rect.width <= 0 || rect.height <= 0) return;
+
       setCanvasSize({
         width: rect.width,
         height: rect.height,

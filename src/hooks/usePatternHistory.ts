@@ -34,7 +34,7 @@ function patternsEqual(a: Pattern, b: Pattern): boolean {
   );
 }
 
-export function usePatternHistory(initialPattern: Pattern) {
+export function usePatternHistory(initialPattern: Pattern, isActive = true) {
   const [history, setHistory] = useState<HistoryState>(() => ({
     past: [],
     present: initialPattern,
@@ -162,6 +162,8 @@ export function usePatternHistory(initialPattern: Pattern) {
   // ========================================
 
   useEffect(() => {
+    if (!isActive) return;
+
     function handleKeyDown(event: KeyboardEvent) {
       const target = event.target;
 
@@ -198,7 +200,7 @@ export function usePatternHistory(initialPattern: Pattern) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [undo, redo]);
+  }, [undo, redo, isActive]);
 
   return {
     pattern: history.present,

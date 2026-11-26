@@ -24,20 +24,25 @@ import type { Pattern, Tool, HalfStitchDirection } from "../types/pattern";
 
 import type { ResizeDimensions } from "../types/canvasResize";
 
+import type { FinishProjectState } from "../types/finishProject";
+
 import "../styles/CanvasPage.css";
 
 // ========================================
 // PROJECT SETTINGS
 // ========================================
 
-type ProjectSettings = {
+type ProjectSettings = Omit<
+  FinishProjectState,
+  "pattern" | "projectId" | "projectName"
+> & {
+  projectId?: number;
   projectName?: string;
-  width: number;
-  height: number;
-  fabricCount: number;
-  fabricColor: string;
-  selectedPalette: string;
   pattern?: Pattern;
+};
+
+type CanvasPageProps = {
+  isActive?: boolean;
 };
 
 // ========================================
@@ -61,7 +66,7 @@ function createEmptyPattern(width: number, height: number): Pattern {
 // CANVAS PAGE
 // ========================================
 
-function CanvasPage() {
+function CanvasPage({ isActive = true }: CanvasPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
@@ -219,7 +224,7 @@ function CanvasPage() {
     redo,
     canUndo,
     canRedo,
-  } = usePatternHistory(initialPatternRef.current);
+  } = usePatternHistory(initialPatternRef.current, isActive);
 
   // ========================================
   // REFERENCE IMAGE
@@ -377,35 +382,43 @@ function CanvasPage() {
 
     redo();
   }
-
   // ========================================
   // NAVIGATION
   // ========================================
 
+  const navigationDisabled =
+    paletteSaving ||
+    imageLoading ||
+    isImageDragging ||
+    resizeDimensions !== null;
+
   function handleFinish() {
-    if (isImageDragging || resizeDimensions !== null) {
+    if (navigationDisabled) return;
+
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      window.alert("Project ID is missing.");
       return;
     }
 
-    navigate("/finish", {
-      state: {
-        ...projectSettings,
+    const finishProject: FinishProjectState = {
+      projectId,
+      projectName,
 
-        projectId,
-        projectName,
+      width: pattern.width,
+      height: pattern.height,
 
-        width: pattern.width,
-        height: pattern.height,
+      fabricCount: projectSettings?.fabricCount ?? 14,
+      fabricColor: projectSettings?.fabricColor ?? "Antique White",
 
-        selectedPalette: selectedPaletteId,
+      selectedPalette: selectedPaletteId,
 
-        pattern,
-      },
+      pattern,
+    };
+
+    navigate(`/finished/${projectId}`, {
+      state: finishProject,
     });
   }
-
-  const navigationDisabled =
-    paletteSaving || isImageDragging || resizeDimensions !== null;
 
   // ========================================
   // RENDER

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import { useCanvasViewport } from "../hooks/useCanvasViewport";
 import type { Pattern } from "../types/pattern";
-
+import type { FinishProjectState } from "../types/finishProject";
 import {
   getFinishColors,
   renderFinishPattern,
@@ -15,20 +15,6 @@ import {
 import type { FinishDisplayMode } from "../utils/canvas/renderFinishPattern";
 
 import "../styles/FinishPage.css";
-
-// ========================================
-// TYPES
-// ========================================
-
-type FinishProjectState = {
-  projectName?: string;
-  width: number;
-  height: number;
-  fabricCount: number;
-  fabricColor: string;
-  selectedPalette: string;
-  pattern: Pattern;
-};
 
 // ========================================
 // HELPERS
@@ -59,8 +45,11 @@ function escapeHTML(value: string) {
 function FinishPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
 
   const project = location.state as FinishProjectState | null;
+
+  const projectId = Number(params.id ?? project?.projectId);
 
   const pattern = project?.pattern;
   const projectName = project?.projectName || "Untitled Project";
@@ -243,8 +232,14 @@ function FinishPage() {
   // ========================================
 
   function backToEditor() {
-    navigate("/canvas", {
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      navigate("/");
+      return;
+    }
+
+    navigate(`/canvas/${projectId}`, {
       state: project,
+      replace: true,
     });
   }
 
