@@ -419,7 +419,7 @@ function CanvasPage() {
         <button
           type="button"
           className="back-button"
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/")}
           disabled={navigationDisabled}>
           <span className="material-symbols-sharp">arrow_back</span>
           Back to home

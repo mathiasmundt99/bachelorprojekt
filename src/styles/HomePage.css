@@ -131,6 +131,389 @@ button {
   outline-offset: 2px;
 }
 
+/* ========================================
+   PROJECT FILTERS
+======================================== */
+
+.project-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.project-filter-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+/* ========================================
+   PROJECT SEARCH
+======================================== */
+
+.project-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #ffffff;
+  color: #202020;
+
+  box-shadow: 4px 4px 0 #202020;
+}
+
+.project-search > .material-symbols-sharp {
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.project-search-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+
+  padding: 12px 0;
+
+  border: none;
+  outline: none;
+  border-radius: 0;
+
+  background: transparent;
+  color: #202020;
+
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.project-search-input::placeholder {
+  color: #777777;
+}
+
+.project-search:focus-within {
+  background: #fffafa;
+  border-color: #e90065;
+}
+
+.project-search-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ========================================
+   CLEAR SEARCH BUTTON
+======================================== */
+
+.project-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #f04f98;
+  color: #202020;
+
+  cursor: pointer;
+}
+
+.project-search-clear .material-symbols-sharp {
+  font-size: 18px;
+}
+
+.project-search-clear:hover:not(:disabled) {
+  background: #d9b9f1;
+}
+
+.project-search-clear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   PROJECT SORT
+======================================== */
+
+.project-sort {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  flex-shrink: 0;
+
+  min-width: 200px;
+  min-height: 48px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d9b9f1;
+  color: #202020;
+
+  box-shadow: 4px 4px 0 #202020;
+}
+
+.project-sort > .material-symbols-sharp {
+  position: absolute;
+  left: 12px;
+
+  font-size: 24px;
+
+  pointer-events: none;
+}
+
+.project-sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 12px 38px 12px 46px;
+
+  box-sizing: border-box;
+
+  border: none;
+  border-radius: 0;
+  outline: none;
+
+  background: transparent;
+  color: #202020;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.project-sort-select option {
+  background: #fffafa;
+  color: #202020;
+}
+
+.project-sort-arrow {
+  position: absolute;
+  right: 10px;
+
+  display: flex;
+  align-items: center;
+
+  pointer-events: none;
+}
+
+.project-sort-arrow .material-symbols-sharp {
+  font-size: 22px;
+}
+
+.project-sort:hover,
+.project-sort:focus-within {
+  background: #d7f46a;
+}
+
+.project-sort-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   PROJECT FILTER COUNT
+======================================== */
+
+.project-filter-count {
+  margin: 0;
+
+  font-family: monospace;
+  font-size: 12px;
+
+  color: #666666;
+}
+
+/* ========================================
+   PROJECT LIST STATES
+======================================== */
+
+.project-list-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  min-height: 220px;
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  border: 2px dashed #202020;
+
+  background: #fffafa;
+  color: #202020;
+
+  text-align: center;
+}
+
+.project-list-state > .material-symbols-sharp {
+  font-size: 44px;
+}
+
+.project-list-state strong {
+  font-size: 16px;
+}
+
+.project-list-state p {
+  max-width: 260px;
+  margin: 0;
+
+  overflow-wrap: anywhere;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #666666;
+}
+
+/* ========================================
+   PROJECT ERROR
+======================================== */
+
+.project-list-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 20px;
+  padding: 12px 16px;
+
+  border: 2px solid #202020;
+
+  background: #f04f98;
+  color: #202020;
+
+  box-shadow: 3px 3px 0 #202020;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.project-list-error > .material-symbols-sharp {
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+/* ========================================
+   PROJECT STATE BUTTONS
+======================================== */
+
+.project-clear-filters,
+.project-error-retry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 8px 12px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d9b9f1;
+  color: #202020;
+
+  box-shadow: 3px 3px 0 #202020;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.project-clear-filters {
+  margin-top: 4px;
+}
+
+.project-error-retry {
+  flex-shrink: 0;
+  margin-left: auto;
+
+  background: #ffffff;
+}
+
+.project-clear-filters .material-symbols-sharp,
+.project-error-retry .material-symbols-sharp {
+  font-size: 18px;
+}
+
+.project-clear-filters:hover,
+.project-error-retry:hover {
+  background: #d7f46a;
+}
+
+.project-clear-filters:active,
+.project-error-retry:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #202020;
+}
+
+/* ========================================
+   LOADING ANIMATION
+======================================== */
+
+.project-loading-icon {
+  animation: project-loading-spin 1s linear infinite;
+}
+
+@keyframes project-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-loading-icon {
+    animation: none;
+  }
+}
+
+/* ========================================
+   PROJECT FILTER FOCUS
+======================================== */
+
+.project-search-clear:focus-visible,
+.project-clear-filters:focus-visible,
+.project-error-retry:focus-visible {
+  outline: 3px solid #7254c7;
+  outline-offset: 4px;
+}
+
 /* =========================
    PROJECT GRID
 ========================= */

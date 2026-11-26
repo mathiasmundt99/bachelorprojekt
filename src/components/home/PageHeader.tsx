@@ -12,12 +12,6 @@ function PageHeader({ projectCount }: Props) {
 
         <h1>Your projects</h1>
       </div>
-
-      <input
-        type="search"
-        placeholder="⌕  Search projects"
-        className="search-input"
-      />
     </div>
   );
 }
