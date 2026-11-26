@@ -293,6 +293,84 @@
   user-select: none;
   cursor: crosshair;
 }
+/* ========================================
+   CANVAS RESIZE
+======================================== */
+
+.canvas-wrapper.is-resizing .pattern-canvas {
+  cursor: default;
+}
+
+.canvas-resize-outline {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  outline: 2px solid #202020;
+  pointer-events: none;
+}
+
+.canvas-resize-outline.dragging {
+  outline: 2px dashed #e90065;
+  background: rgba(215, 244, 106, 0.12);
+}
+
+.canvas-resize-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  border: 2px solid #202020;
+  border-radius: 0;
+  background: #d7f46a;
+  box-shadow: 2px 2px 0 #202020;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.canvas-resize-handle:hover,
+.canvas-resize-handle:active {
+  background: #f04f98;
+}
+
+.canvas-resize-handle.resize-n,
+.canvas-resize-handle.resize-s {
+  cursor: ns-resize;
+}
+
+.canvas-resize-handle.resize-e,
+.canvas-resize-handle.resize-w {
+  cursor: ew-resize;
+}
+
+.canvas-resize-handle.resize-nw,
+.canvas-resize-handle.resize-se {
+  cursor: nwse-resize;
+}
+
+.canvas-resize-handle.resize-ne,
+.canvas-resize-handle.resize-sw {
+  cursor: nesw-resize;
+}
+
+.canvas-resize-dimensions {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 28px);
+  transform: translateX(-50%);
+  padding: 5px 9px;
+  border: 2px solid #202020;
+  background: #d7f46a;
+  color: #202020;
+  box-shadow: 2px 2px 0 #202020;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 /* ========================================
    RIGHT SIDEBAR
@@ -1199,7 +1277,8 @@
 .color-swatch:focus-visible,
 .add-color-button:focus-visible,
 .palette-header select:focus-visible,
-.palette-controls select:focus-visible {
+.palette-controls select:focus-visible,
+.canvas-resize-handle:focus-visible {
   outline: 3px solid #7254c7;
   outline-offset: 4px;
 }

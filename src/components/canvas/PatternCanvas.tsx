@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { CanvasSettings } from "../../types/canvasSettings";
+
 import type {
   Pattern,
   Tool,
@@ -8,7 +8,12 @@ import type {
   Backstitch,
 } from "../../types/pattern";
 
+import type { CanvasSettings } from "../../types/canvasSettings";
+import type { ResizeDimensions } from "../../types/canvasResize";
+
 import { useCanvasViewport } from "../../hooks/useCanvasViewport";
+import { useCanvasResize } from "../../hooks/useCanvasResize";
+
 import { floodFill } from "../../utils/canvas/floodFill";
 
 import {
@@ -17,6 +22,8 @@ import {
   type BackstitchPreview,
 } from "../../utils/canvas/drawPattern";
 
+import CanvasResizeHandles from "./CanvasResizeHandles";
+
 type Point = {
   x: number;
   y: number;
@@ -24,13 +31,20 @@ type Point = {
 
 type PatternCanvasProps = {
   pattern: Pattern;
-  dmcCodeByHex: ReadonlyMap<string, string>;
-  stitchSymbols: ReadonlyMap<string, string>;
-  settings: CanvasSettings;
   selectedTool: Tool;
   selectedColor: string;
   selectedHalfStitchDirection: HalfStitchDirection;
+
+  dmcCodeByHex: ReadonlyMap<string, string>;
+  stitchSymbols: ReadonlyMap<string, string>;
+
+  settings: CanvasSettings;
+  isResizing: boolean;
+
+  onResizeDimensionsChange: (dimensions: ResizeDimensions | null) => void;
+
   onPatternChange: (update: Pattern | ((current: Pattern) => Pattern)) => void;
+
   onColorChange: (color: string) => void;
   onToolChange: (tool: Tool) => void;
   onSwapColorSelect: (color: string) => void;
@@ -46,6 +60,8 @@ function PatternCanvas({
   dmcCodeByHex,
   stitchSymbols,
   settings,
+  isResizing,
+  onResizeDimensionsChange,
   onPatternChange,
   onColorChange,
   onToolChange,
@@ -55,9 +71,39 @@ function PatternCanvas({
 }: PatternCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isResizeDragging, setIsResizeDragging] = useState(false);
+  // ========================================
+  // VIEWPORT
+  // ========================================
 
-  const { viewport, canvasSize, startPan, movePan, stopPan } =
-    useCanvasViewport(canvasRef, containerRef, pattern.width, pattern.height);
+  const { viewport, setViewport, canvasSize, startPan, movePan, stopPan } =
+    useCanvasViewport(
+      canvasRef,
+      containerRef,
+      pattern.width,
+      pattern.height,
+      isResizeDragging,
+    );
+
+  // ========================================
+  // CANVAS RESIZE
+  // ========================================
+
+  const { previewBounds, startResize, moveResize, finishResize, cancelResize } =
+    useCanvasResize({
+      pattern,
+      viewport,
+      onPatternChange,
+      onViewportChange: setViewport,
+      onDimensionsChange: onResizeDimensionsChange,
+    });
+  useEffect(() => {
+    setIsResizeDragging(previewBounds !== null);
+  }, [previewBounds]);
+
+  // ========================================
+  // DRAWING STATE
+  // ========================================
 
   const isPaintingRef = useRef(false);
 
@@ -86,7 +132,7 @@ function PatternCanvas({
       settings,
       dmcCodeByHex,
       stitchSymbols,
-      backstitchPreview,
+      backstitchPreview: isResizing ? null : backstitchPreview,
     });
   }, [
     pattern,
@@ -96,22 +142,54 @@ function PatternCanvas({
     dmcCodeByHex,
     stitchSymbols,
     backstitchPreview,
+    isResizing,
   ]);
 
   // ========================================
-  // RESET BACKSTITCH
+  // RESET BACKSTITCH PREVIEW
   // ========================================
 
   useEffect(() => {
     backstitchStartRef.current = null;
     setBackstitchPreview(null);
-  }, [selectedTool]);
+  }, [selectedTool, isResizing]);
+
+  // ========================================
+  // RESIZE MODE CLEANUP
+  // ========================================
+
+  useEffect(() => {
+    if (!isResizing && previewBounds) {
+      cancelResize();
+    }
+
+    if (isResizing && isPaintingRef.current) {
+      onStrokeEnd();
+
+      isPaintingRef.current = false;
+      lastPaintedCellRef.current = null;
+    }
+  }, [isResizing, previewBounds, cancelResize, onStrokeEnd]);
+
+  useEffect(() => {
+    if (isResizeDragging) {
+      stopPan();
+    }
+  }, [isResizeDragging, stopPan]);
+
+  // ========================================
+  // KEYBOARD EVENTS
+  // ========================================
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         backstitchStartRef.current = null;
         setBackstitchPreview(null);
+
+        if (isResizing) {
+          cancelResize();
+        }
       }
     }
 
@@ -120,7 +198,7 @@ function PatternCanvas({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [isResizing, cancelResize]);
 
   // ========================================
   // UPDATE BACKSTITCH PREVIEW COLOR
@@ -138,7 +216,7 @@ function PatternCanvas({
   }, [selectedColor]);
 
   // ========================================
-  // GET POINTER POSITION
+  // POINTER POSITION
   // ========================================
 
   function getPatternPosition(
@@ -155,13 +233,10 @@ function PatternCanvas({
 
     return {
       x: (screenX - viewport.offsetX) / viewport.zoom,
+
       y: (screenY - viewport.offsetY) / viewport.zoom,
     };
   }
-
-  // ========================================
-  // GET CELL FROM POINTER
-  // ========================================
 
   function getCellFromPointer(
     event: ReactPointerEvent<HTMLCanvasElement>,
@@ -171,6 +246,7 @@ function PatternCanvas({
     if (!position) return null;
 
     const cellX = Math.floor(position.x / CELL_SIZE);
+
     const cellY = Math.floor(position.y / CELL_SIZE);
 
     if (
@@ -187,10 +263,6 @@ function PatternCanvas({
       y: cellY,
     };
   }
-
-  // ========================================
-  // GET GRID INTERSECTION FROM POINTER
-  // ========================================
 
   function getGridPointFromPointer(
     event: ReactPointerEvent<HTMLCanvasElement>,
@@ -215,7 +287,7 @@ function PatternCanvas({
   }
 
   // ========================================
-  // FIND FRENCH KNOT
+  // STITCH HIT DETECTION
   // ========================================
 
   function findFrenchKnot(currentPattern: Pattern, position: Point) {
@@ -228,10 +300,6 @@ function PatternCanvas({
       return Math.hypot(position.x - knotX, position.y - knotY) <= hitRadius;
     });
   }
-
-  // ========================================
-  // DISTANCE TO BACKSTITCH
-  // ========================================
 
   function distanceToBackstitch(position: Point, stitch: Backstitch): number {
     const startX = stitch.startX * CELL_SIZE;
@@ -264,10 +332,6 @@ function PatternCanvas({
     return Math.hypot(position.x - closestX, position.y - closestY);
   }
 
-  // ========================================
-  // FIND BACKSTITCH
-  // ========================================
-
   function findBackstitch(currentPattern: Pattern, position: Point) {
     return [...(currentPattern.backstitches ?? [])]
       .reverse()
@@ -276,16 +340,13 @@ function PatternCanvas({
       );
   }
 
-  // ========================================
-  // FIND HALF STITCH
-  // ========================================
-
   function findHalfStitch(
     currentPattern: Pattern,
     position: Point,
     cell: Point,
   ) {
     const localX = position.x / CELL_SIZE - cell.x;
+
     const localY = position.y / CELL_SIZE - cell.y;
 
     return [...(currentPattern.halfStitches ?? [])].reverse().find((stitch) => {
@@ -310,7 +371,7 @@ function PatternCanvas({
   }
 
   // ========================================
-  // PENCIL AND HALF STITCH
+  // FULL STITCH & HALF STITCH
   // ========================================
 
   function paintCell(x: number, y: number) {
@@ -324,8 +385,6 @@ function PatternCanvas({
     lastPaintedCellRef.current = { x, y };
 
     onPatternChange((currentPattern) => {
-      // HALF STITCH
-
       if (selectedTool === "half-stitch") {
         const halfStitches = currentPattern.halfStitches ?? [];
 
@@ -361,8 +420,6 @@ function PatternCanvas({
           ],
         };
       }
-
-      // PENCIL
 
       if (selectedTool !== "pencil") {
         return currentPattern;
@@ -428,10 +485,10 @@ function PatternCanvas({
   // ========================================
 
   function placeBackstitch(x: number, y: number) {
-    const start = backstitchStartRef.current;
     const point = { x, y };
 
-    // FIRST POINT
+    const start = backstitchStartRef.current;
+
     if (!start) {
       backstitchStartRef.current = point;
 
@@ -444,12 +501,10 @@ function PatternCanvas({
       return;
     }
 
-    // Prevent zero-length backstitches
     if (start.x === x && start.y === y) {
       return;
     }
 
-    // ADD NEW BACKSTITCH
     onPatternChange((currentPattern) => {
       const backstitches = currentPattern.backstitches ?? [];
 
@@ -471,6 +526,7 @@ function PatternCanvas({
 
       return {
         ...currentPattern,
+
         backstitches: [
           ...existingStitches,
           {
@@ -484,7 +540,6 @@ function PatternCanvas({
       };
     });
 
-    // Continue from the latest point
     backstitchStartRef.current = point;
 
     setBackstitchPreview({
@@ -505,8 +560,6 @@ function PatternCanvas({
     if (!position) return;
 
     onPatternChange((currentPattern) => {
-      // ERASE FRENCH KNOT
-
       const knot = findFrenchKnot(currentPattern, position);
 
       if (knot) {
@@ -518,8 +571,6 @@ function PatternCanvas({
           ),
         };
       }
-
-      // ERASE BACKSTITCH
 
       const backstitch = findBackstitch(currentPattern, position);
 
@@ -535,8 +586,6 @@ function PatternCanvas({
 
       if (!cell) return currentPattern;
 
-      // ERASE HALF STITCH
-
       const halfStitch = findHalfStitch(currentPattern, position, cell);
 
       if (halfStitch) {
@@ -548,8 +597,6 @@ function PatternCanvas({
           ),
         };
       }
-
-      // ERASE FULL STITCH
 
       if (currentPattern.stitches[cell.y][cell.x] === null) {
         return currentPattern;
@@ -577,7 +624,7 @@ function PatternCanvas({
   }
 
   // ========================================
-  // GET COLOR FROM POINTER
+  // COLOR PICKING
   // ========================================
 
   function getColorFromPointer(
@@ -587,37 +634,27 @@ function PatternCanvas({
 
     if (!position) return null;
 
-    // FRENCH KNOT
-
     const knot = findFrenchKnot(pattern, position);
 
     if (knot) return knot.color;
-
-    // BACKSTITCH
 
     const backstitch = findBackstitch(pattern, position);
 
     if (backstitch) return backstitch.color;
 
-    // GET CELL
-
     const cell = getCellFromPointer(event);
 
     if (!cell) return null;
-
-    // HALF STITCH
 
     const halfStitch = findHalfStitch(pattern, position, cell);
 
     if (halfStitch) return halfStitch.color;
 
-    // FULL STITCH
-
     return pattern.stitches[cell.y][cell.x];
   }
 
   // ========================================
-  // EYEDROPPER TOOL
+  // EYEDROPPER
   // ========================================
 
   function pickColor(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -646,16 +683,26 @@ function PatternCanvas({
   // ========================================
 
   function handlePointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
-    if (event.button !== 0 && event.button !== 1) return;
+    if (isResizeDragging) return;
 
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (event.button !== 0 && event.button !== 1) {
+      return;
+    }
 
     // PAN
 
     if (event.button === 1) {
+      event.preventDefault();
+
+      event.currentTarget.setPointerCapture(event.pointerId);
+
       startPan(event);
       return;
     }
+
+    if (isResizing) return;
+
+    event.currentTarget.setPointerCapture(event.pointerId);
 
     // BACKSTITCH
 
@@ -679,6 +726,7 @@ function PatternCanvas({
       isPaintingRef.current = true;
 
       onStrokeStart();
+
       placeFrenchKnot(point.x, point.y);
 
       return;
@@ -690,6 +738,7 @@ function PatternCanvas({
       isPaintingRef.current = true;
 
       onStrokeStart();
+
       eraseAtPointer(event);
 
       return;
@@ -709,8 +758,6 @@ function PatternCanvas({
       return;
     }
 
-    // GET CELL
-
     const cell = getCellFromPointer(event);
 
     if (!cell) return;
@@ -722,12 +769,13 @@ function PatternCanvas({
       return;
     }
 
-    // PENCIL AND HALF STITCH
+    // FULL STITCH & HALF STITCH
 
     if (selectedTool === "pencil" || selectedTool === "half-stitch") {
       isPaintingRef.current = true;
 
       onStrokeStart();
+
       paintCell(cell.x, cell.y);
     }
   }
@@ -737,7 +785,11 @@ function PatternCanvas({
   // ========================================
 
   function handlePointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
+    if (isResizeDragging) return;
+
     if (movePan(event)) return;
+
+    if (isResizing) return;
 
     // BACKSTITCH PREVIEW
 
@@ -789,7 +841,7 @@ function PatternCanvas({
       return;
     }
 
-    // PENCIL AND HALF STITCH
+    // FULL STITCH & HALF STITCH
 
     const cell = getCellFromPointer(event);
 
@@ -822,7 +874,9 @@ function PatternCanvas({
   // ========================================
 
   function handlePointerLeave() {
-    if (selectedTool !== "backstitch") return;
+    if (selectedTool !== "backstitch") {
+      return;
+    }
 
     setBackstitchPreview((current) => {
       if (!current) return null;
@@ -839,7 +893,9 @@ function PatternCanvas({
   // ========================================
 
   return (
-    <div ref={containerRef} className="canvas-wrapper">
+    <div
+      ref={containerRef}
+      className={`canvas-wrapper ${isResizing ? "is-resizing" : ""}`}>
       <canvas
         ref={canvasRef}
         className="pattern-canvas"
@@ -850,6 +906,19 @@ function PatternCanvas({
         onPointerLeave={handlePointerLeave}
         onLostPointerCapture={handlePointerUp}
       />
+
+      {isResizing && (
+        <CanvasResizeHandles
+          width={pattern.width}
+          height={pattern.height}
+          viewport={viewport}
+          previewBounds={previewBounds}
+          onResizeStart={startResize}
+          onResizeMove={moveResize}
+          onResizeEnd={finishResize}
+          onResizeCancel={cancelResize}
+        />
+      )}
     </div>
   );
 }

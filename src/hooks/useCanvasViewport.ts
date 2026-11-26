@@ -59,6 +59,7 @@ export function useCanvasViewport(
   containerRef: React.RefObject<HTMLDivElement | null>,
   patternWidth: number,
   patternHeight: number,
+  isResizeDragging = false,
 ) {
   const [viewport, setViewport] = useState<Viewport>({
     zoom: 1,
@@ -318,6 +319,8 @@ export function useCanvasViewport(
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
 
+      if (isResizeDragging) return;
+
       // Normal trackpad scroll = pan
       if (!event.ctrlKey) {
         setViewport((current) =>
@@ -379,10 +382,12 @@ export function useCanvasViewport(
     patternHeight,
     canvasSize.width,
     canvasSize.height,
+    isResizeDragging,
   ]);
 
   return {
     viewport,
+    setViewport,
     canvasSize,
     startPan,
     movePan,

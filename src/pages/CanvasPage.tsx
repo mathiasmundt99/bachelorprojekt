@@ -5,21 +5,41 @@ import Toolbar from "../components/canvas/Toolbar";
 import ColorPalette from "../components/canvas/ColorPalette";
 import PatternCanvas from "../components/canvas/PatternCanvas";
 import SwapToolPanel from "../components/canvas/SwapToolPanel";
+import CanvasSettingsPanel from "../components/canvas/CanvasSettingsPanel";
 
 import { usePatternHistory } from "../hooks/usePatternHistory";
 import { useColorPalettes } from "../hooks/useColorPalettes";
+import { useCanvasSettings } from "../hooks/useCanvasSettings";
 
 import { swapColors } from "../utils/canvas/swapColors";
 import { createDmcCodeMap } from "../utils/colors/colorUtils";
+import { createStitchSymbolMap } from "../utils/canvas/stitchSymbols";
 
 import { updateProject } from "../services/projectService";
 
 import type { Pattern, Tool, HalfStitchDirection } from "../types/pattern";
-import CanvasSettingsPanel from "../components/canvas/CanvasSettingsPanel";
-import { useCanvasSettings } from "../hooks/useCanvasSettings";
-import { createStitchSymbolMap } from "../utils/canvas/stitchSymbols";
+
+import type { ResizeDimensions } from "../types/canvasResize";
 
 import "../styles/CanvasPage.css";
+
+// ========================================
+// PROJECT SETTINGS
+// ========================================
+
+type ProjectSettings = {
+  projectName?: string;
+  width: number;
+  height: number;
+  fabricCount: number;
+  fabricColor: string;
+  selectedPalette: string;
+  pattern?: Pattern;
+};
+
+// ========================================
+// CREATE EMPTY PATTERN
+// ========================================
 
 function createEmptyPattern(width: number, height: number): Pattern {
   return {
@@ -34,19 +54,13 @@ function createEmptyPattern(width: number, height: number): Pattern {
   };
 }
 
-type ProjectSettings = {
-  projectName?: string;
-  width: number;
-  height: number;
-  fabricCount: number;
-  fabricColor: string;
-  selectedPalette: string;
-  pattern?: Pattern;
-};
+// ========================================
+// CANVAS PAGE
+// ========================================
 
 function CanvasPage() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams();
 
   const projectId = Number(params.projectId ?? params.id);
@@ -61,19 +75,18 @@ function CanvasPage() {
   // ========================================
 
   const [projectName, setProjectName] = useState(
-    () => projectSettings?.projectName?.trim() || "Untitled Project",
+    projectSettings?.projectName ?? "Untitled project",
   );
 
   const [isEditingName, setIsEditingName] = useState(false);
 
-  const [draftProjectName, setDraftProjectName] = useState(projectName);
+  const [draftName, setDraftName] = useState(projectName);
 
   const cancelNameEditRef = useRef(false);
 
   function startEditingName() {
     cancelNameEditRef.current = false;
-
-    setDraftProjectName(projectName);
+    setDraftName(projectName);
     setIsEditingName(true);
   }
 
@@ -83,15 +96,18 @@ function CanvasPage() {
       return;
     }
 
-    setProjectName(draftProjectName.trim() || "Untitled Project");
+    const nextName = draftName.trim();
+
+    if (nextName) {
+      setProjectName(nextName);
+    }
 
     setIsEditingName(false);
   }
 
   function cancelEditingName() {
     cancelNameEditRef.current = true;
-
-    setDraftProjectName(projectName);
+    setDraftName(projectName);
     setIsEditingName(false);
   }
 
@@ -111,6 +127,7 @@ function CanvasPage() {
   const [paletteSaveError, setPaletteSaveError] = useState("");
 
   const dmcCodeByHex = useMemo(() => createDmcCodeMap(allColors), [allColors]);
+
   const stitchSymbols = useMemo(
     () => createStitchSymbolMap(dmcCodeByHex),
     [dmcCodeByHex],
@@ -129,6 +146,7 @@ function CanvasPage() {
     if (!Number.isInteger(projectId) || projectId <= 0) {
       setSelectedPaletteId(previousPalette);
       setPaletteSaveError("Project ID is missing.");
+
       return;
     }
 
@@ -150,10 +168,20 @@ function CanvasPage() {
   }
 
   // ========================================
-  // TOOLS
+  // SELECTED TOOL
   // ========================================
 
   const [selectedTool, setSelectedTool] = useState<Tool>("pencil");
+
+  const [selectedColor, setSelectedColor] = useState("#000000");
+
+  const [selectedHalfStitchDirection, setSelectedHalfStitchDirection] =
+    useState<HalfStitchDirection>("top-left");
+
+  // ========================================
+  // CANVAS SETTINGS
+  // ========================================
+
   const {
     settings,
     settingsOpen,
@@ -164,10 +192,27 @@ function CanvasPage() {
     toggleResize,
   } = useCanvasSettings();
 
-  const [selectedColor, setSelectedColor] = useState("#000000");
+  // ========================================
+  // CANVAS RESIZE
+  // ========================================
 
-  const [selectedHalfStitchDirection, setSelectedHalfStitchDirection] =
-    useState<HalfStitchDirection>("top-left");
+  const [resizeDimensions, setResizeDimensions] =
+    useState<ResizeDimensions | null>(null);
+
+  function handleToggleResize() {
+    setResizeDimensions(null);
+    toggleResize();
+  }
+
+  function handleCloseSettings() {
+    setResizeDimensions(null);
+    closeSettings();
+  }
+
+  function handleToggleSettings() {
+    setResizeDimensions(null);
+    toggleSettings();
+  }
 
   // ========================================
   // PATTERN HISTORY
@@ -196,18 +241,28 @@ function CanvasPage() {
 
   const [swapToColor, setSwapToColor] = useState<string | null>(null);
 
-  function handleToolChange(tool: Tool) {
-    setSelectedTool(tool);
+  function handleResetSwap() {
     setSwapFromColor(null);
     setSwapToColor(null);
   }
 
+  function handleToolChange(tool: Tool) {
+    if (isResizing) return;
+
+    setSelectedTool(tool);
+    handleResetSwap();
+  }
+
   function handleSwapFromColor(color: string) {
+    if (isResizing) return;
+
     setSwapFromColor(color);
     setSwapToColor(null);
   }
 
   function handlePaletteColorChange(color: string) {
+    if (isResizing) return;
+
     if (selectedTool !== "swap") {
       setSelectedColor(color);
       return;
@@ -222,13 +277,8 @@ function CanvasPage() {
     );
   }
 
-  function handleResetSwap() {
-    setSwapFromColor(null);
-    setSwapToColor(null);
-  }
-
   // ========================================
-  // FINISH PAGE
+  // NAVIGATION
   // ========================================
 
   function handleFinish() {
@@ -251,30 +301,28 @@ function CanvasPage() {
 
   return (
     <div className="app">
-      {/* HEADER */}
+      {/* ====================================
+          HEADER
+      ==================================== */}
 
       <header className="app-header">
         <button
           type="button"
           className="back-button"
-          disabled={paletteSaving}
-          onClick={() => navigate("/")}>
-          <span className="material-symbols-sharp" aria-hidden="true">
-            chevron_left
-          </span>
+          onClick={() => navigate("/home")}
+          disabled={paletteSaving}>
+          <span className="material-symbols-sharp">arrow_back</span>
           Back to home
         </button>
 
-        <div className="project-name-container">
+        <div className="project-name">
           {isEditingName ? (
             <input
-              autoFocus
               className="project-name-input"
               type="text"
-              maxLength={100}
-              value={draftProjectName}
-              onChange={(event) => setDraftProjectName(event.target.value)}
-              onFocus={(event) => event.target.select()}
+              value={draftName}
+              autoFocus
+              onChange={(event) => setDraftName(event.target.value)}
               onBlur={saveProjectName}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
@@ -285,21 +333,16 @@ function CanvasPage() {
                   cancelEditingName();
                 }
               }}
-              aria-label="Project name"
             />
           ) : (
             <button
               type="button"
               className="project-name-button"
               onClick={startEditingName}
-              title="Rename project">
+              title="Edit project name">
               <span>{projectName}</span>
 
-              <span
-                className="project-name-edit-icon material-symbols-sharp"
-                aria-hidden="true">
-                edit_line
-              </span>
+              <span className="material-symbols-sharp">edit</span>
             </button>
           )}
         </div>
@@ -307,31 +350,31 @@ function CanvasPage() {
         <div className="save-status" aria-live="polite">
           <span className="save-indicator" />
 
-          <span>
-            {paletteSaving
-              ? "Saving palette..."
-              : paletteSaveError
-                ? paletteSaveError
-                : "Editing project"}
-          </span>
+          {paletteSaving
+            ? "Saving palette..."
+            : paletteSaveError
+              ? paletteSaveError
+              : "Editing project"}
         </div>
 
         <button
           type="button"
           className="next-button"
-          disabled={paletteSaving}
-          onClick={handleFinish}>
+          onClick={handleFinish}
+          disabled={paletteSaving}>
           Done / Next
-          <span className="material-symbols-sharp" aria-hidden="true">
-            chevron_right
-          </span>
+          <span className="material-symbols-sharp">arrow_forward</span>
         </button>
       </header>
 
-      {/* EDITOR */}
+      {/* ====================================
+          EDITOR LAYOUT
+      ==================================== */}
 
       <div className="editor-layout">
-        {/* LEFT SIDEBAR */}
+        {/* ==================================
+            LEFT SIDEBAR
+        ================================== */}
 
         <aside className="left-sidebar">
           <Toolbar
@@ -339,28 +382,30 @@ function CanvasPage() {
             onToolChange={handleToolChange}
             onUndo={undo}
             onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
+            canUndo={canUndo && !resizeDimensions}
+            canRedo={canRedo && !resizeDimensions}
             selectedHalfStitchDirection={selectedHalfStitchDirection}
             onHalfStitchDirectionChange={setSelectedHalfStitchDirection}
             settingsOpen={settingsOpen}
-            onSettingsClick={toggleSettings}
+            onSettingsClick={handleToggleSettings}
           />
 
           {settingsOpen && (
             <CanvasSettingsPanel
               settings={settings}
-              width={pattern.width}
-              height={pattern.height}
+              width={resizeDimensions?.width ?? pattern.width}
+              height={resizeDimensions?.height ?? pattern.height}
               isResizing={isResizing}
               onSettingsChange={updateSettings}
-              onToggleResize={toggleResize}
-              onClose={closeSettings}
+              onToggleResize={handleToggleResize}
+              onClose={handleCloseSettings}
             />
           )}
         </aside>
 
-        {/* CANVAS */}
+        {/* ==================================
+            CANVAS AREA
+        ================================== */}
 
         <main className="canvas-area">
           <PatternCanvas
@@ -371,6 +416,8 @@ function CanvasPage() {
             dmcCodeByHex={dmcCodeByHex}
             stitchSymbols={stitchSymbols}
             settings={settings}
+            isResizing={isResizing}
+            onResizeDimensionsChange={setResizeDimensions}
             onPatternChange={setPattern}
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}
@@ -379,7 +426,7 @@ function CanvasPage() {
             onStrokeEnd={endStroke}
           />
 
-          {selectedTool === "swap" && (
+          {selectedTool === "swap" && !isResizing && (
             <SwapToolPanel
               fromColor={swapFromColor}
               toColor={swapToColor}
@@ -390,7 +437,9 @@ function CanvasPage() {
           )}
         </main>
 
-        {/* RIGHT SIDEBAR */}
+        {/* ==================================
+            RIGHT SIDEBAR
+        ================================== */}
 
         <aside className="right-sidebar">
           <ColorPalette
