@@ -3,6 +3,8 @@ import type { CanvasSettings } from "../../types/canvasSettings";
 
 import { drawGrid } from "./drawGrid";
 import { drawStitchLabels } from "./drawStitchLabels";
+import type { ReferenceImage } from "../../types/referenceImage";
+import { drawReferenceImage } from "./drawReferenceImage";
 
 export const CELL_SIZE = 24;
 
@@ -33,6 +35,8 @@ type DrawPatternOptions = {
   dmcCodeByHex: ReadonlyMap<string, string>;
   stitchSymbols: ReadonlyMap<string, string>;
   backstitchPreview?: BackstitchPreview | null;
+  referenceImage?: ReferenceImage | null;
+  imageElement?: HTMLImageElement | null;
 };
 
 export function drawPattern({
@@ -45,6 +49,8 @@ export function drawPattern({
   dmcCodeByHex,
   stitchSymbols,
   backstitchPreview,
+  referenceImage = null,
+  imageElement = null,
 }: DrawPatternOptions) {
   const ctx = canvas.getContext("2d");
 
@@ -88,8 +94,19 @@ export function drawPattern({
   // ========================================
 
   ctx.fillStyle = "#ffffff";
-
   ctx.fillRect(0, 0, patternWidth, patternHeight);
+
+  // ========================================
+  // REFERENCE IMAGE
+  // ========================================
+
+  drawReferenceImage({
+    ctx,
+    referenceImage,
+    imageElement,
+    canvasWidth: patternWidth,
+    canvasHeight: patternHeight,
+  });
 
   // ========================================
   // FULL STITCHES

@@ -137,7 +137,7 @@ export function useCanvasViewport(
   // ========================================
 
   const startPan = useCallback(
-    (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    (event: ReactPointerEvent<HTMLElement>) => {
       isPanningRef.current = true;
 
       panStartRef.current = {
@@ -314,7 +314,9 @@ export function useCanvasViewport(
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+
+    if (!canvas || !container) return;
 
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
@@ -369,15 +371,16 @@ export function useCanvasViewport(
       });
     }
 
-    canvas.addEventListener("wheel", handleWheel, {
+    container.addEventListener("wheel", handleWheel, {
       passive: false,
     });
 
     return () => {
-      canvas.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("wheel", handleWheel);
     };
   }, [
     canvasRef,
+    containerRef,
     patternWidth,
     patternHeight,
     canvasSize.width,

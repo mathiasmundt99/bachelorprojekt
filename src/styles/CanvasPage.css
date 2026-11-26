@@ -297,7 +297,8 @@
    CANVAS RESIZE
 ======================================== */
 
-.canvas-wrapper.is-resizing .pattern-canvas {
+.canvas-wrapper.is-resizing .pattern-canvas,
+.canvas-wrapper.is-image-editing .pattern-canvas {
   cursor: default;
 }
 
@@ -973,12 +974,12 @@
    CANVAS SETTINGS POPUP
 ======================================== */
 
-.canvas-settings-popup {
+.canvas-settings-popup,
+.image-tool-popup {
   position: absolute;
   left: calc(100% + 16px);
   bottom: 12px;
   z-index: 100;
-
   width: 300px;
   max-height: calc(100% - 24px);
   overflow-y: auto;
@@ -1267,6 +1268,516 @@
 }
 
 /* ========================================
+   IMAGE TOOL
+======================================== */
+
+.image-tool-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-tool-heading .material-symbols-sharp {
+  font-size: 22px;
+}
+
+/* ========================================
+   IMAGE PREVIEW
+======================================== */
+
+.image-tool-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 120px;
+  padding: 10px;
+  margin-bottom: 12px;
+
+  box-sizing: border-box;
+
+  border: 2px dashed #202020;
+  background: #f7edf8;
+}
+
+.image-tool-preview img {
+  display: block;
+
+  width: 100%;
+  height: 110px;
+
+  object-fit: contain;
+
+  user-select: none;
+  pointer-events: none;
+}
+
+.image-tool-filename {
+  width: 100%;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-family: monospace;
+  font-size: 11px;
+  text-align: center;
+}
+
+.image-tool-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 4px;
+
+  text-align: center;
+}
+
+.image-tool-empty .material-symbols-sharp {
+  font-size: 38px;
+}
+
+.image-tool-empty strong {
+  font-size: 13px;
+}
+
+.image-tool-empty > span:last-child {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #666666;
+}
+
+/* ========================================
+   IMAGE TOOL BUTTONS
+======================================== */
+
+.image-tool-upload,
+.image-tool-action,
+.image-tool-visibility,
+.image-tool-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #ffffff;
+  color: #202020;
+
+  box-shadow: 3px 3px 0 #202020;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.image-tool-upload .material-symbols-sharp,
+.image-tool-action .material-symbols-sharp,
+.image-tool-visibility .material-symbols-sharp,
+.image-tool-remove .material-symbols-sharp {
+  font-size: 20px;
+}
+
+.image-tool-upload {
+  background: #f04f98;
+}
+
+.image-tool-upload:hover:not(:disabled),
+.image-tool-action:hover:not(:disabled),
+.image-tool-visibility:hover:not(:disabled) {
+  background: #d9b9f1;
+}
+
+.image-tool-action.active,
+.image-tool-action.active:hover:not(:disabled) {
+  background: #d7f46a;
+}
+
+.image-tool-upload:active:not(:disabled),
+.image-tool-action:active:not(:disabled),
+.image-tool-visibility:active:not(:disabled),
+.image-tool-remove:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #202020;
+}
+
+.image-tool-upload:disabled,
+.image-tool-action:disabled,
+.image-tool-visibility:disabled,
+.image-tool-remove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ========================================
+   FILE INFORMATION
+======================================== */
+
+.image-tool-file-hint {
+  margin: 10px 0 14px;
+
+  font-family: monospace;
+  font-size: 10px;
+  text-align: center;
+
+  color: #666666;
+}
+
+.image-tool-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px;
+  margin-bottom: 12px;
+
+  border: 2px solid #e90065;
+  background: #f7edf8;
+  color: #a60049;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.image-tool-error .material-symbols-sharp {
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+/* ========================================
+   IMAGE TOOL SECTIONS
+======================================== */
+
+.image-tool-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 14px 0;
+
+  border-top: 2px solid #202020;
+}
+
+.image-tool-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.image-tool-section-header label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.image-tool-section-header strong {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.image-tool-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0;
+
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.image-tool-section-header .material-symbols-sharp,
+.image-tool-section-title .material-symbols-sharp {
+  font-size: 20px;
+}
+
+/* ========================================
+   OPACITY SLIDER
+======================================== */
+
+.image-opacity-slider {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 100%;
+  height: 12px;
+  margin: 4px 0;
+
+  box-sizing: border-box;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d9b9f1;
+
+  cursor: pointer;
+}
+
+.image-opacity-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 18px;
+  height: 22px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d7f46a;
+
+  box-shadow: 2px 2px 0 #202020;
+
+  cursor: ew-resize;
+}
+
+.image-opacity-slider::-moz-range-thumb {
+  width: 14px;
+  height: 18px;
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d7f46a;
+
+  box-shadow: 2px 2px 0 #202020;
+
+  cursor: ew-resize;
+}
+
+.image-opacity-slider:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.image-opacity-labels {
+  display: flex;
+  justify-content: space-between;
+
+  font-family: monospace;
+  font-size: 10px;
+
+  color: #666666;
+}
+
+/* ========================================
+   TRANSFORM ACTIONS
+======================================== */
+
+.image-tool-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.image-tool-hint {
+  margin: 0;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  color: #666666;
+}
+
+/* ========================================
+   VISIBILITY
+======================================== */
+
+.image-tool-visibility {
+  justify-content: flex-start;
+}
+
+.image-tool-visibility .settings-switch {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.image-tool-visibility.active .settings-switch {
+  background: #d7f46a;
+}
+
+.image-tool-visibility.active .settings-switch::after {
+  transform: translateX(16px);
+}
+
+/* ========================================
+   REMOVE IMAGE
+======================================== */
+
+.image-tool-remove {
+  margin-top: 2px;
+
+  background: #fffafa;
+  color: #e90065;
+}
+
+.image-tool-remove:hover:not(:disabled) {
+  background: #f04f98;
+  color: #202020;
+}
+
+/* ========================================
+   REFERENCE IMAGE OVERLAY
+======================================== */
+
+.reference-image-overlay {
+  position: absolute;
+  z-index: 5;
+
+  box-sizing: border-box;
+
+  outline: 2px dashed #e90065;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+.reference-image-overlay.image-mode-resize {
+  outline-style: solid;
+}
+
+.reference-image-overlay.dragging {
+  outline: 2px solid #e90065;
+}
+
+.reference-image-overlay.locked {
+  outline: 2px dashed #777777;
+}
+
+/* ========================================
+   REFERENCE IMAGE LABEL
+======================================== */
+
+.reference-image-label {
+  position: absolute;
+
+  left: 0;
+  bottom: calc(100% + 12px);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  max-width: 200px;
+  padding: 5px 8px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #202020;
+  background: #d9b9f1;
+  color: #202020;
+
+  box-shadow: 2px 2px 0 #202020;
+
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+
+  pointer-events: none;
+}
+
+.reference-image-label .material-symbols-sharp {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.reference-image-label > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reference-image-overlay.locked .reference-image-label {
+  background: #eee8ef;
+}
+
+/* ========================================
+   REFERENCE IMAGE MOVE AREA
+======================================== */
+
+.reference-image-move-area {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: auto;
+
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.reference-image-overlay.dragging .reference-image-move-area {
+  cursor: grabbing;
+}
+
+/* ========================================
+   REFERENCE IMAGE RESIZE HANDLES
+======================================== */
+
+.reference-image-handle {
+  position: absolute;
+
+  width: 14px;
+  height: 14px;
+  padding: 0;
+
+  box-sizing: border-box;
+
+  transform: translate(-50%, -50%);
+
+  border: 2px solid #202020;
+  border-radius: 0;
+
+  background: #d9b9f1;
+
+  box-shadow: 2px 2px 0 #202020;
+
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.reference-image-handle:hover,
+.reference-image-handle:active {
+  background: #f04f98;
+}
+
+.reference-image-handle.resize-nw,
+.reference-image-handle.resize-se {
+  cursor: nwse-resize;
+}
+
+.reference-image-handle.resize-ne,
+.reference-image-handle.resize-sw {
+  cursor: nesw-resize;
+}
+
+/* ========================================
    FOCUS STYLES
 ======================================== */
 
@@ -1278,7 +1789,9 @@
 .add-color-button:focus-visible,
 .palette-header select:focus-visible,
 .palette-controls select:focus-visible,
-.canvas-resize-handle:focus-visible {
+.canvas-resize-handle:focus-visible,
+.reference-image-handle:focus-visible,
+.image-opacity-slider:focus-visible {
   outline: 3px solid #7254c7;
   outline-offset: 4px;
 }

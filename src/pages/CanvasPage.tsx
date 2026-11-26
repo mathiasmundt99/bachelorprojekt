@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import Toolbar from "../components/canvas/Toolbar";
@@ -6,10 +7,12 @@ import ColorPalette from "../components/canvas/ColorPalette";
 import PatternCanvas from "../components/canvas/PatternCanvas";
 import SwapToolPanel from "../components/canvas/SwapToolPanel";
 import CanvasSettingsPanel from "../components/canvas/CanvasSettingsPanel";
+import ImageToolPanel from "../components/canvas/ImageToolPanel";
 
 import { usePatternHistory } from "../hooks/usePatternHistory";
 import { useColorPalettes } from "../hooks/useColorPalettes";
 import { useCanvasSettings } from "../hooks/useCanvasSettings";
+import { useReferenceImage } from "../hooks/useReferenceImage";
 
 import { swapColors } from "../utils/canvas/swapColors";
 import { createDmcCodeMap } from "../utils/colors/colorUtils";
@@ -199,21 +202,6 @@ function CanvasPage() {
   const [resizeDimensions, setResizeDimensions] =
     useState<ResizeDimensions | null>(null);
 
-  function handleToggleResize() {
-    setResizeDimensions(null);
-    toggleResize();
-  }
-
-  function handleCloseSettings() {
-    setResizeDimensions(null);
-    closeSettings();
-  }
-
-  function handleToggleSettings() {
-    setResizeDimensions(null);
-    toggleSettings();
-  }
-
   // ========================================
   // PATTERN HISTORY
   // ========================================
@@ -234,6 +222,36 @@ function CanvasPage() {
   } = usePatternHistory(initialPatternRef.current);
 
   // ========================================
+  // REFERENCE IMAGE
+  // ========================================
+
+  const [imageToolOpen, setImageToolOpen] = useState(false);
+
+  const [isImageDragging, setIsImageDragging] = useState(false);
+
+  const {
+    referenceImage,
+    imageElement,
+
+    imageMode,
+    setImageMode,
+
+    loading: imageLoading,
+    error: imageError,
+
+    uploadImage,
+    resizeImage,
+
+    setImageOpacity,
+    toggleImageLock,
+    toggleImageVisibility,
+
+    resetImageTransform,
+    shiftImage,
+    removeImage,
+  } = useReferenceImage(pattern.width, pattern.height);
+
+  // ========================================
   // SWAP TOOL
   // ========================================
 
@@ -246,22 +264,87 @@ function CanvasPage() {
     setSwapToColor(null);
   }
 
+  // ========================================
+  // CANVAS SETTINGS HANDLERS
+  // ========================================
+
+  function handleToggleResize() {
+    if (isImageDragging) return;
+
+    setImageToolOpen(false);
+    setResizeDimensions(null);
+
+    toggleResize();
+  }
+
+  function handleCloseSettings() {
+    setResizeDimensions(null);
+    closeSettings();
+  }
+
+  function handleToggleSettings() {
+    if (isImageDragging) return;
+
+    setImageToolOpen(false);
+    setResizeDimensions(null);
+
+    toggleSettings();
+  }
+
+  // ========================================
+  // IMAGE TOOL HANDLERS
+  // ========================================
+
+  function handleToggleImageTool() {
+    if (isImageDragging) return;
+
+    if (imageToolOpen) {
+      setImageToolOpen(false);
+      return;
+    }
+
+    handleCloseSettings();
+    handleResetSwap();
+
+    setImageToolOpen(true);
+  }
+
+  function handleCloseImageTool() {
+    if (isImageDragging) return;
+
+    setImageToolOpen(false);
+  }
+
+  // ========================================
+  // TOOL HANDLERS
+  // ========================================
+
   function handleToolChange(tool: Tool) {
-    if (isResizing) return;
+    if (isResizing || isImageDragging) {
+      return;
+    }
+
+    setImageToolOpen(false);
+
+    handleCloseSettings();
 
     setSelectedTool(tool);
     handleResetSwap();
   }
 
   function handleSwapFromColor(color: string) {
-    if (isResizing) return;
+    if (isResizing || imageToolOpen || isImageDragging) {
+      return;
+    }
 
     setSwapFromColor(color);
     setSwapToColor(null);
   }
 
   function handlePaletteColorChange(color: string) {
-    if (isResizing) return;
+    if (isResizing || imageToolOpen || isImageDragging) {
+      return;
+    }
 
     if (selectedTool !== "swap") {
       setSelectedColor(color);
@@ -278,22 +361,51 @@ function CanvasPage() {
   }
 
   // ========================================
+  // HISTORY HANDLERS
+  // ========================================
+
+  const historyDisabled = resizeDimensions !== null || isImageDragging;
+
+  function handleUndo() {
+    if (historyDisabled) return;
+
+    undo();
+  }
+
+  function handleRedo() {
+    if (historyDisabled) return;
+
+    redo();
+  }
+
+  // ========================================
   // NAVIGATION
   // ========================================
 
   function handleFinish() {
+    if (isImageDragging || resizeDimensions !== null) {
+      return;
+    }
+
     navigate("/finish", {
       state: {
         ...projectSettings,
+
         projectId,
         projectName,
+
         width: pattern.width,
         height: pattern.height,
+
         selectedPalette: selectedPaletteId,
+
         pattern,
       },
     });
   }
+
+  const navigationDisabled =
+    paletteSaving || isImageDragging || resizeDimensions !== null;
 
   // ========================================
   // RENDER
@@ -301,16 +413,14 @@ function CanvasPage() {
 
   return (
     <div className="app">
-      {/* ====================================
-          HEADER
-      ==================================== */}
+      {/* HEADER */}
 
       <header className="app-header">
         <button
           type="button"
           className="back-button"
           onClick={() => navigate("/home")}
-          disabled={paletteSaving}>
+          disabled={navigationDisabled}>
           <span className="material-symbols-sharp">arrow_back</span>
           Back to home
         </button>
@@ -354,41 +464,45 @@ function CanvasPage() {
             ? "Saving palette..."
             : paletteSaveError
               ? paletteSaveError
-              : "Editing project"}
+              : imageLoading
+                ? "Loading image..."
+                : "Editing project"}
         </div>
 
         <button
           type="button"
           className="next-button"
           onClick={handleFinish}
-          disabled={paletteSaving}>
+          disabled={navigationDisabled}>
           Done / Next
           <span className="material-symbols-sharp">arrow_forward</span>
         </button>
       </header>
 
-      {/* ====================================
-          EDITOR LAYOUT
-      ==================================== */}
+      {/* EDITOR LAYOUT */}
 
       <div className="editor-layout">
-        {/* ==================================
-            LEFT SIDEBAR
-        ================================== */}
+        {/* LEFT SIDEBAR */}
 
         <aside className="left-sidebar">
           <Toolbar
             selectedTool={selectedTool}
             onToolChange={handleToolChange}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo && !resizeDimensions}
-            canRedo={canRedo && !resizeDimensions}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo && !historyDisabled}
+            canRedo={canRedo && !historyDisabled}
             selectedHalfStitchDirection={selectedHalfStitchDirection}
             onHalfStitchDirectionChange={setSelectedHalfStitchDirection}
             settingsOpen={settingsOpen}
             onSettingsClick={handleToggleSettings}
+            imageToolOpen={imageToolOpen}
+            onImageToolClick={handleToggleImageTool}
+            isResizing={isResizing}
+            isImageDragging={isImageDragging}
           />
+
+          {/* CANVAS SETTINGS PANEL */}
 
           {settingsOpen && (
             <CanvasSettingsPanel
@@ -401,11 +515,29 @@ function CanvasPage() {
               onClose={handleCloseSettings}
             />
           )}
+
+          {/* IMAGE TOOL PANEL */}
+
+          {imageToolOpen && (
+            <ImageToolPanel
+              referenceImage={referenceImage}
+              mode={imageMode}
+              loading={imageLoading}
+              error={imageError}
+              isDragging={isImageDragging}
+              onUpload={uploadImage}
+              onModeChange={setImageMode}
+              onOpacityChange={setImageOpacity}
+              onToggleLock={toggleImageLock}
+              onToggleVisibility={toggleImageVisibility}
+              onReset={resetImageTransform}
+              onRemove={removeImage}
+              onClose={handleCloseImageTool}
+            />
+          )}
         </aside>
 
-        {/* ==================================
-            CANVAS AREA
-        ================================== */}
+        {/* CANVAS AREA */}
 
         <main className="canvas-area">
           <PatternCanvas
@@ -418,6 +550,14 @@ function CanvasPage() {
             settings={settings}
             isResizing={isResizing}
             onResizeDimensionsChange={setResizeDimensions}
+            referenceImage={referenceImage}
+            imageElement={imageElement}
+            imageToolOpen={imageToolOpen}
+            imageMode={imageMode}
+            isImageDragging={isImageDragging}
+            onImageTransformChange={resizeImage}
+            onImageDraggingChange={setIsImageDragging}
+            onImageShift={shiftImage}
             onPatternChange={setPattern}
             onColorChange={setSelectedColor}
             onToolChange={handleToolChange}
@@ -426,7 +566,7 @@ function CanvasPage() {
             onStrokeEnd={endStroke}
           />
 
-          {selectedTool === "swap" && !isResizing && (
+          {selectedTool === "swap" && !isResizing && !imageToolOpen && (
             <SwapToolPanel
               fromColor={swapFromColor}
               toColor={swapToColor}
@@ -437,9 +577,7 @@ function CanvasPage() {
           )}
         </main>
 
-        {/* ==================================
-            RIGHT SIDEBAR
-        ================================== */}
+        {/* RIGHT SIDEBAR */}
 
         <aside className="right-sidebar">
           <ColorPalette

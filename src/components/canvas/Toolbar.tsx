@@ -1,19 +1,32 @@
 import { useState } from "react";
+
 import type { HalfStitchDirection, Tool } from "../../types/pattern";
 
 type ToolbarProps = {
   selectedTool: Tool;
   onToolChange: (tool: Tool) => void;
+
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+
   selectedHalfStitchDirection?: HalfStitchDirection;
   onHalfStitchDirectionChange?: (direction: HalfStitchDirection) => void;
 
   settingsOpen: boolean;
   onSettingsClick: () => void;
+
+  imageToolOpen: boolean;
+  onImageToolClick: () => void;
+
+  isResizing: boolean;
+  isImageDragging: boolean;
 };
+
+// ========================================
+// TOOLS
+// ========================================
 
 const tools: {
   id: Tool;
@@ -23,7 +36,7 @@ const tools: {
   { id: "pencil", label: "Brush", icon: "edit" },
   { id: "eraser", label: "Eraser", icon: "ink_eraser" },
   { id: "fill", label: "Fill", icon: "format_color_fill" },
-  { id: "eyedropper", label: "Pick color", icon: "colorize" },
+  { id: "eyedropper", label: "Eyedropper", icon: "colorize" },
   { id: "swap", label: "Swap colors", icon: "swap_horiz" },
 ];
 
@@ -32,54 +45,26 @@ const stitchTools: {
   label: string;
   icon: string;
 }[] = [
-  {
-    id: "pencil",
-    label: "Full stitch",
-    icon: "square",
-  },
-  {
-    id: "half-stitch",
-    label: "Half stitch",
-    icon: "change_history",
-  },
-  {
-    id: "backstitch",
-    label: "Backstitch",
-    icon: "show_chart",
-  },
-  {
-    id: "french-knot",
-    label: "French knot",
-    icon: "circle",
-  },
+  { id: "pencil", label: "Full stitch", icon: "square" },
+  { id: "half-stitch", label: "Half stitch", icon: "change_history" },
+  { id: "backstitch", label: "Backstitch", icon: "show_chart" },
+  { id: "french-knot", label: "French knot", icon: "circle" },
 ];
 
 const halfStitchDirections: {
   id: HalfStitchDirection;
   label: string;
-  icon: string;
+  symbol: string;
 }[] = [
-  {
-    id: "top-left",
-    label: "Top left",
-    icon: "◤",
-  },
-  {
-    id: "top-right",
-    label: "Top right",
-    icon: "◥",
-  },
-  {
-    id: "bottom-left",
-    label: "Bottom left",
-    icon: "◣",
-  },
-  {
-    id: "bottom-right",
-    label: "Bottom right",
-    icon: "◢",
-  },
+  { id: "top-left", label: "Top left", symbol: "◤" },
+  { id: "top-right", label: "Top right", symbol: "◥" },
+  { id: "bottom-left", label: "Bottom left", symbol: "◣" },
+  { id: "bottom-right", label: "Bottom right", symbol: "◢" },
 ];
+
+// ========================================
+// ICONS
+// ========================================
 
 function MaterialIcon({ name, size = 24 }: { name: string; size?: number }) {
   return (
@@ -94,28 +79,34 @@ function MaterialIcon({ name, size = 24 }: { name: string; size?: number }) {
 
 function StitchTypesIcon() {
   return (
-    <svg
-      width="34"
-      height="34"
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true">
-      <circle cx="9" cy="10" r="7" fill="#000000" />
+    <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <rect
+        x="4"
+        y="4"
+        width="13"
+        height="13"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      />
 
-      <rect x="21" y="3" width="15" height="15" stroke="#000000" />
+      <path d="M23 4H36V17Z" fill="currentColor" />
 
-      <path d="M21 3H36L21 18Z" fill="#000000" />
+      <path d="M4 36L17 23" stroke="currentColor" strokeWidth="2.5" />
 
-      <rect x="2" y="23" width="15" height="15" stroke="#000000" />
-
-      <path d="M2 23H9.5V38H2Z" fill="#000000" />
-
-      <rect x="21" y="23" width="15" height="15" stroke="#000000" />
-
-      <path d="M36 23V38H21Z" fill="#000000" />
+      <circle
+        cx="29.5"
+        cy="29.5"
+        r="5.5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      />
     </svg>
   );
 }
+
+// ========================================
+// TOOLBAR
+// ========================================
 
 function Toolbar({
   selectedTool,
@@ -128,50 +119,51 @@ function Toolbar({
   onHalfStitchDirectionChange,
   settingsOpen,
   onSettingsClick,
+  imageToolOpen,
+  onImageToolClick,
+  isResizing,
+  isImageDragging,
 }: ToolbarProps) {
   const [stitchPopupOpen, setStitchPopupOpen] = useState(false);
+
+  const toolsDisabled = isResizing || isImageDragging;
 
   const isStitchTool =
     selectedTool === "half-stitch" ||
     selectedTool === "backstitch" ||
     selectedTool === "french-knot";
 
-  // ========================================
-  // SELECT STITCH TYPE
-  // ========================================
+  function selectTool(tool: Tool) {
+    setStitchPopupOpen(false);
+    onToolChange(tool);
+  }
 
   function selectStitchTool(tool: Tool) {
     onToolChange(tool);
   }
 
-  // ========================================
-  // SELECT HALF STITCH DIRECTION
-  // ========================================
-
   function selectDirection(direction: HalfStitchDirection) {
     onHalfStitchDirectionChange?.(direction);
   }
 
-  // ========================================
-  // RENDER
-  // ========================================
-
   return (
     <div className="toolbar">
       <div className="toolbar-tools">
-        {/* STANDARD TOOLS */}
+        {/* DRAWING TOOLS */}
 
         {tools.map((tool) => (
           <button
             key={tool.id}
-            className={
-              selectedTool === tool.id ? "tool-button active" : "tool-button"
-            }
-            onClick={() => onToolChange(tool.id)}
             type="button"
+            className={`tool-button ${
+              selectedTool === tool.id && !imageToolOpen && !isResizing
+                ? "active"
+                : ""
+            }`}
             title={tool.label}
             aria-label={tool.label}
-            aria-pressed={selectedTool === tool.id}>
+            disabled={toolsDisabled}
+            onClick={() => selectTool(tool.id)}>
             <span className="tool-icon">
               <MaterialIcon name={tool.icon} />
             </span>
@@ -183,39 +175,42 @@ function Toolbar({
         <div className="stitch-tool-wrapper">
           <button
             type="button"
-            className={
-              isStitchTool || stitchPopupOpen
-                ? "tool-button active"
-                : "tool-button"
-            }
+            className={`tool-button ${
+              !imageToolOpen && !isResizing && (isStitchTool || stitchPopupOpen)
+                ? "active"
+                : ""
+            }`}
             title="Stitch types"
             aria-label="Stitch types"
-            aria-expanded={stitchPopupOpen}
-            onClick={() => setStitchPopupOpen((open) => !open)}>
+            aria-expanded={stitchPopupOpen && !imageToolOpen}
+            disabled={toolsDisabled}
+            onClick={() => {
+              if (imageToolOpen || settingsOpen) {
+                onToolChange(selectedTool);
+                setStitchPopupOpen(true);
+              } else {
+                setStitchPopupOpen((current) => !current);
+              }
+            }}>
             <span className="tool-icon">
               <StitchTypesIcon />
             </span>
           </button>
 
-          {/* STITCH TYPES POPUP */}
-
-          {stitchPopupOpen && (
+          {stitchPopupOpen && !imageToolOpen && !settingsOpen && (
             <div className="stitch-popup tool-popup">
-              {/* POPUP HEADER */}
-
               <div className="stitch-popup-header tool-popup-header">
                 <strong>STITCH TYPES</strong>
 
                 <button
                   type="button"
                   className="stitch-popup-close tool-popup-close"
-                  onClick={() => setStitchPopupOpen(false)}
-                  aria-label="Close stitch types">
-                  <MaterialIcon name="close" size={18} />
+                  title="Close stitch types"
+                  aria-label="Close stitch types"
+                  onClick={() => setStitchPopupOpen(false)}>
+                  <MaterialIcon name="close" />
                 </button>
               </div>
-
-              {/* STITCH OPTIONS */}
 
               <div className="stitch-popup-options">
                 {stitchTools.map((tool) => (
@@ -225,22 +220,19 @@ function Toolbar({
                     className={`stitch-popup-option tool-popup-option ${
                       selectedTool === tool.id ? "active" : ""
                     }`}
-                    aria-pressed={selectedTool === tool.id}
                     onClick={() => selectStitchTool(tool.id)}>
                     <span className="stitch-popup-option-icon">
-                      <MaterialIcon name={tool.icon} size={22} />
+                      <MaterialIcon name={tool.icon} />
                     </span>
 
-                    <span>{tool.label}</span>
+                    {tool.label}
                   </button>
                 ))}
               </div>
 
-              {/* HALF STITCH DIRECTIONS */}
-
               {selectedTool === "half-stitch" && (
                 <div className="stitch-popup-directions">
-                  <span className="stitch-popup-subtitle">DIRECTION</span>
+                  <h4 className="stitch-popup-subtitle">DIRECTION</h4>
 
                   <div className="stitch-popup-direction-grid">
                     {halfStitchDirections.map((direction) => (
@@ -254,11 +246,8 @@ function Toolbar({
                         }`}
                         title={direction.label}
                         aria-label={direction.label}
-                        aria-pressed={
-                          selectedHalfStitchDirection === direction.id
-                        }
                         onClick={() => selectDirection(direction.id)}>
-                        {direction.icon}
+                        {direction.symbol}
                       </button>
                     ))}
                   </div>
@@ -267,41 +256,60 @@ function Toolbar({
             </div>
           )}
         </div>
+
+        {/* IMAGE TOOL */}
+
+        <button
+          type="button"
+          className={`tool-button ${imageToolOpen ? "active" : ""}`}
+          title="Reference image"
+          aria-label="Reference image"
+          aria-expanded={imageToolOpen}
+          disabled={isImageDragging}
+          onClick={() => {
+            setStitchPopupOpen(false);
+            onImageToolClick();
+          }}>
+          <span className="tool-icon">
+            <MaterialIcon name="image" />
+          </span>
+        </button>
       </div>
 
       {/* BOTTOM TOOLS */}
 
       <div className="toolbar-bottom">
         <button
-          className="tool-button"
           type="button"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Undo (Ctrl/Cmd + Z)"
-          aria-label="Undo">
+          className="tool-button"
+          title="Undo"
+          aria-label="Undo"
+          disabled={!canUndo || isImageDragging}
+          onClick={onUndo}>
           <span className="tool-icon">
             <MaterialIcon name="undo" />
           </span>
         </button>
 
         <button
-          className="tool-button"
           type="button"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Redo (Ctrl/Cmd + Shift + Z)"
-          aria-label="Redo">
+          className="tool-button"
+          title="Redo"
+          aria-label="Redo"
+          disabled={!canRedo || isImageDragging}
+          onClick={onRedo}>
           <span className="tool-icon">
             <MaterialIcon name="redo" />
           </span>
         </button>
 
         <button
-          className={`tool-button ${settingsOpen ? "active" : ""}`}
           type="button"
+          className={`tool-button ${settingsOpen ? "active" : ""}`}
           title="Canvas settings"
           aria-label="Canvas settings"
           aria-expanded={settingsOpen}
+          disabled={isImageDragging}
           onClick={() => {
             setStitchPopupOpen(false);
             onSettingsClick();
